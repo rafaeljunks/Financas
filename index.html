@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Junks Elite">
+    <meta name="theme-color" content="#0b0f1a">
+    <title>Junks Finanças Elite v27</title>
+    
+    <style>
+        :root {
+            --bg: #0b101b; --card: #1a2234; --accent: #00f298;
+            --blue: #3b82f6; --danger: #ff5252; --text: #f8fafc; --sub: #94a3b8;
+            --euro: #ffcc00; --border: rgba(255, 255, 255, 0.08);
+        }
+        * { -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; outline: none; box-sizing: border-box; }
+        input, select { -webkit-user-select: text; user-select: text; }
+
+        body { 
+            font-family: 'Inter', -apple-system, system-ui, sans-serif; 
+            background-color: var(--bg); color: var(--text); margin: 0; 
+            padding: env(safe-area-inset-top) 16px 100px 16px; 
+        }
+        .container { max-width: 480px; margin: auto; }
+        .main-balance { text-align: center; padding: 30px 0; background: radial-gradient(circle at top, rgba(0, 242, 152, 0.1) 0%, transparent 80%); border-radius: 30px; margin-bottom: 10px; }
+        .main-balance h1 { font-size: 42px; margin: 8px 0; color: var(--accent); font-weight: 800; }
+        .card { background: var(--card); padding: 20px; border-radius: 24px; margin-bottom: 16px; border: 1px solid var(--border); box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
+        h3 { margin: 0 0 16px 0; font-size: 11px; color: var(--sub); text-transform: uppercase; letter-spacing: 1.5px; }
+        input, select { width: 100%; padding: 14px; margin-bottom: 12px; border-radius: 14px; border: 1px solid var(--border); background: #0b101b; color: white; font-size: 16px; }
+        button { width: 100%; padding: 15px; border-radius: 14px; border: none; background: var(--accent); color: #000; font-weight: 800; cursor: pointer; }
+        .btn-lancar { width: 110px; padding: 12px; font-size: 14px; background: linear-gradient(135deg, var(--accent), #00c878); }
+        .btn-small { width: auto; padding: 8px 12px; font-size: 11px; border-radius: 10px; font-weight: 700; margin-right: 4px; }
+        .total-invest-val { font-size: 19px; font-weight: 700; }
+        .bank-item { padding: 15px; background: rgba(255,255,255,0.03); border-radius: 18px; margin-bottom: 12px; border: 1px solid var(--border); }
+        .item { display: flex; justify-content: space-between; align-items: center; padding: 14px; background: rgba(255,255,255,0.02); border-radius: 16px; margin-bottom: 10px; border: 1px solid var(--border); }
+        .tag { font-size: 9px; padding: 3px 8px; border-radius: 6px; font-weight: 800; margin-left: 6px; }
+        .tag-fixo { background: rgba(0, 242, 152, 0.15); color: var(--accent); }
+        .tag-parc { background: rgba(59, 130, 246, 0.15); color: var(--blue); }
+        .tag-norm { background: rgba(148, 163, 184, 0.15); color: var(--sub); }
+        .btn-del-gasto { background: none; color: var(--danger); border: none; padding: 8px; font-size: 15px; cursor: pointer; }
+        .resumo-final { margin-top: 25px; padding: 22px; background: rgba(255,255,255,0.02); border-radius: 24px; border: 1px dashed rgba(148, 163, 184, 0.3); }
+        .resumo-line { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 8px; color: var(--sub); }
+        .section-title { font-size: 12px; color: var(--blue); margin: 25px 0 10px 5px; font-weight: 800; text-transform: uppercase; }
+        #mesSelecao { background: var(--card); border: 1px solid var(--border); color: var(--blue); font-weight: 700; text-align: center; margin-bottom: 15px; width: 100%; border-radius: 14px; padding: 10px; }
+        .label-fixo { font-size: 11px; color: var(--accent); font-weight: 600; display: flex; align-items: center; gap: 5px; }
+        .label-fixo input { width: 16px; height: 16px; margin: 0; accent-color: var(--accent); }
+        #modalInv { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.9); z-index:1000; align-items:center; justify-content:center; backdrop-filter: blur(5px); }
+        .modal-content { background:var(--card); width:88%; padding:25px; border-radius:28px; }
+    </style>
+</head>
+<body>
+
+<div id="modalInv">
+    <div class="modal-content">
+        <h2 style="font-size:20px; margin-bottom:20px;">Instituição</h2>
+        <input type="hidden" id="editIdx">
+        <input type="text" id="invNome" placeholder="Nome do Banco">
+        <input type="number" id="invSaldo" placeholder="Saldo" step="0.01">
+        <select id="invMoeda"><option value="BRL">Real (R$)</option><option value="EUR">Euro (€)</option></select>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+            <button onclick="salvarModalInv()">Salvar</button>
+            <button onclick="fecharModalInv()" style="background:rgba(255,82,82,0.1); color:var(--danger)">Fechar</button>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <div class="main-balance">
+        <small style="font-weight:700;">SALDO DISPONÍVEL</small>
+        <h1 id="sobraDisplay">R$ 0,00</h1>
+    </div>
+    
+    <input type="month" id="mesSelecao" onchange="carregarTudo()">
+
+    <div class="card">
+        <h3>📊 Ajuste de Teto</h3>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+            <div>
+                <label style="font-size:9px; color:var(--sub); font-weight:800; margin-left:5px;">LIMITE MENSAL</label>
+                <input type="number" id="limiteInput" placeholder="Ex: 3000" oninput="salvarAjustes()" inputmode="decimal">
+            </div>
+            <div>
+                <label style="font-size:9px; color:var(--sub); font-weight:800; margin-left:5px;">SALDO ABATEDOR</label>
+                <input type="number" id="saldoContaInput" placeholder="Ex: 500" oninput="salvarAjustes()" inputmode="decimal">
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h3>📈 Patrimônio Global</h3>
+        <div style="display:flex; justify-content:space-between;">
+            <div><small>TOTAL BRL</small><br><span id="patrimonioBRL" class="total-invest-val" style="color:var(--accent)">R$ 0,00</span></div>
+            <div style="text-align:right;"><small>TOTAL EUR</small><br><span id="patrimonioEUR" class="total-invest-val" style="color:var(--euro)">€ 0,00</span></div>
+        </div>
+        <div id="investList" style="margin-top:20px;"></div>
+        <button onclick="abrirModalInv()" style="background:rgba(59, 130, 246, 0.1); color:var(--blue); padding:10px; font-size:12px; margin-top:10px; width:auto; border:1px solid rgba(59,130,246,0.3);">+ Novo Banco</button>
+    </div>
+
+    <div class="card">
+        <h3>💸 Novo Lançamento</h3>
+        <input type="text" id="desc" placeholder="Descrição">
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+            <input type="number" id="val" placeholder="Valor" step="0.01" inputmode="decimal">
+            <select id="parcelas"><option value="1">À vista</option><script>for(let i=2; i<=18; i++) document.write(`<option value="${i}">${i}x</option>`);</script></select>
+        </div>
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <label class="label-fixo"><input type="checkbox" id="isFixo"> fixo</label>
+            <button onclick="addGasto()" class="btn-lancar">Lançar</button>
+        </div>
+    </div>
+
+    <div id="containerGastos"></div>
+    <div id="resumoTotais" class="resumo-final"></div>
+
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:20px; opacity:0.7">
+        <button class="btn-small" style="background:#2d3748; color:white; padding:12px;" onclick="exportarDados()">📤 Backup</button>
+        <button class="btn-small" style="background:#2d3748; color:white; padding:12px;" onclick="document.getElementById('fileInput').click()">📥 Importar</button>
+    </div>
+    <input type="file" id="fileInput" style="display:none" onchange="importarDados(event)">
+</div>
+
+<script>
+    const KEY = "JUNKS_V27_FINAL";
+    let db = JSON.parse(localStorage.getItem(KEY)) || { meses: {}, fixosMestre: [], inv: [] };
+
+    const inputMes = document.getElementById("mesSelecao");
+    if(!inputMes.value) inputMes.value = new Date().toISOString().slice(0, 7);
+
+    function fMoeda(v, m = 'BRL') { return v.toLocaleString(m === 'EUR' ? 'de-DE' : 'pt-BR', { style: 'currency', currency: m }); }
+
+    function carregarTudo() {
+        const mes = inputMes.value;
+        if (!db.meses[mes]) db.meses[mes] = { limite: 0, saldoConta: 0, itens: [] };
+        
+        db.fixosMestre.forEach(fixo => {
+            const jaExiste = db.meses[mes].itens.some(item => item.d === fixo.d);
+            if (!jaExiste) { db.meses[mes].itens.push({ ...fixo, id: Date.now() + Math.random() }); }
+        });
+
+        document.getElementById("limiteInput").value = db.meses[mes].limite || "";
+        document.getElementById("saldoContaInput").value = db.meses[mes].saldoConta || "";
+        render();
+    }
+
+    function addGasto() {
+        const d = document.getElementById("desc").value, v = parseFloat(document.getElementById("val").value), p = parseInt(document.getElementById("parcelas").value), fixo = document.getElementById("isFixo").checked;
+        if(!d || isNaN(v)) return;
+        if(fixo && !db.fixosMestre.some(f => f.d === d)) { db.fixosMestre.push({ d: d, v: v, cat: 'fixo' }); }
+        for(let i=0; i<p; i++) {
+            let dt = new Date(inputMes.value + "-01T15:00:00");
+            dt.setMonth(dt.getMonth() + i);
+            let mF = dt.toISOString().slice(0, 7);
+            if(!db.meses[mF]) db.meses[mF] = { limite: 0, saldoConta: 0, itens: [] };
+            db.meses[mF].itens.push({ id: Date.now() + Math.random(), d: d + (p > 1 ? ` (${i+1}/${p})` : ""), v: v/p, cat: fixo ? 'fixo' : (p > 1 ? 'parcelado' : 'normal') });
+        }
+        document.getElementById("desc").value = ""; document.getElementById("val").value = "";
+        document.getElementById("isFixo").checked = false; document.getElementById("parcelas").value = "1";
+        salvar();
+    }
+
+    function delGasto(id) {
+        const item = db.meses[inputMes.value].itens.find(i => i.id === id);
+        if(item && item.cat === 'fixo' && confirm("Remover dos meses futuros também?")) { db.fixosMestre = db.fixosMestre.filter(f => f.d !== item.d); }
+        db.meses[inputMes.value].itens = db.meses[inputMes.value].itens.filter(i => i.id !== id);
+        salvar();
+    }
+
+    function salvarAjustes() {
+        const mes = inputMes.value;
+        db.meses[mes].limite = parseFloat(document.getElementById("limiteInput").value) || 0;
+        db.meses[mes].saldoConta = parseFloat(document.getElementById("saldoContaInput").value) || 0;
+        salvar();
+    }
+
+    function salvar() { localStorage.setItem(KEY, JSON.stringify(db)); render(); }
+
+    function render() {
+        const mes = db.meses[inputMes.value] || { itens: [] };
+        const container = document.getElementById("containerGastos");
+        const invL = document.getElementById("investList");
+        container.innerHTML = ""; invL.innerHTML = "";
+        let totalGasto = 0, tBRL = 0, tEUR = 0, sFixo = 0, sParc = 0, sUni = 0;
+
+        db.inv.forEach(i => {
+            if(i.m === 'EUR') tEUR += i.s; else tBRL += i.s;
+            invL.innerHTML += `<div class="bank-item" style="border-left: 5px solid ${i.m === 'EUR' ? 'var(--euro)' : 'var(--accent)'}">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <strong>${i.b}</strong> <b>${fMoeda(i.s, i.m)}</b>
+                </div>
+                <div style="margin-top:10px;">
+                    <button class="btn-small" style="background:var(--accent); color:#000" onclick="addVInv(${i.id})">+ Saldo</button>
+                    <button class="btn-small" style="background:rgba(255,255,255,0.1); color:white" onclick="abrirModalInv(${i.id})">✏️</button>
+                    <button class="btn-small" style="background:rgba(255,82,82,0.1); color:var(--danger)" onclick="delInv(${i.id})">🗑️</button>
+                </div>
+            </div>`;
+        });
+        document.getElementById("patrimonioBRL").innerText = fMoeda(tBRL, 'BRL');
+        document.getElementById("patrimonioEUR").innerText = fMoeda(tEUR, 'EUR');
+
+        const categorias = [
+            { f: i => i.cat === 'fixo', t: "Fixos", c: "tag-fixo", label: "FIXO" },
+            { f: i => i.cat === 'parcelado', t: "Parcelas", c: "tag-parc", label: "PARC" },
+            { f: i => i.cat === 'normal' || !i.cat, t: "Variáveis", c: "tag-norm", label: "ÚNICO" }
+        ];
+
+        categorias.forEach(cat => {
+            const filtrados = (mes.itens || []).filter(cat.f);
+            if(filtrados.length > 0) {
+                container.innerHTML += `<div class="section-title">${cat.t}</div>`;
+                filtrados.forEach(i => {
+                    totalGasto += i.v;
+                    if(cat.label === "FIXO") sFixo += i.v; else if(cat.label === "PARC") sParc += i.v; else sUni += i.v;
+                    container.innerHTML += `<div class="item">
+                        <div>${i.d} <span class="tag ${cat.c}">${cat.label}</span></div>
+                        <div style="display:flex; align-items:center;"><b>${fMoeda(i.v)}</b><button class="btn-del-gasto" onclick="delGasto(${i.id})">🗑️</button></div>
+                    </div>`;
+                });
+            }
+        });
+
+        document.getElementById("resumoTotais").innerHTML = `<h3>Resumo do Mês</h3>
+            <div class="resumo-line">Fixos: <b>${fMoeda(sFixo)}</b></div>
+            <div class="resumo-line">Parcelas: <b>${fMoeda(sParc)}</b></div>
+            <div class="resumo-line">Variáveis: <b>${fMoeda(sUni)}</b></div>
+            <div class="resumo-line" style="margin-top:10px; border-top:1px solid var(--border); padding-top:10px; font-weight:800;">Total de Gastos: ${fMoeda(totalGasto)}</div>`;
+
+        // Lógica: Limite + Saldo Abatedor - Gastos
+        const sobra = ((mes.limite || 0) + (mes.saldoConta || 0)) - totalGasto;
+        document.getElementById("sobraDisplay").innerText = fMoeda(sobra);
+        document.getElementById("sobraDisplay").style.color = sobra < 0 ? "var(--danger)" : "var(--accent)";
+    }
+
+    function abrirModalInv(id = null) {
+        document.getElementById("modalInv").style.display = "flex";
+        if(id) {
+            const i = db.inv.find(x => x.id === id);
+            document.getElementById("editIdx").value = id; document.getElementById("invNome").value = i.b;
+            document.getElementById("invSaldo").value = i.s; document.getElementById("invMoeda").value = i.m;
+        } else {
+            document.getElementById("editIdx").value = ""; document.getElementById("invNome").value = "";
+            document.getElementById("invSaldo").value = ""; document.getElementById("invMoeda").value = "BRL";
+        }
+    }
+    function salvarModalInv() {
+        const id = document.getElementById("editIdx").value, nome = document.getElementById("invNome").value, saldo = parseFloat(document.getElementById("invSaldo").value) || 0, moeda = document.getElementById("invMoeda").value;
+        if(!nome) return;
+        if(id) { const i = db.inv.find(x => x.id == id); i.b = nome; i.s = saldo; i.m = moeda; }
+        else { db.inv.push({ id: Date.now(), b: nome, s: saldo, m: moeda }); }
+        salvar(); fecharModalInv();
+    }
+    function fecharModalInv() { document.getElementById("modalInv").style.display = "none"; }
+    function delInv(id) { if(confirm("Remover?")) { db.inv = db.inv.filter(x => x.id !== id); salvar(); } }
+    function addVInv(id) {
+        const i = db.inv.find(x => x.id === id), v = prompt(`Somar em ${i.b}:`);
+        if(v) { i.s += parseFloat(v.replace(',','.')); salvar(); }
+    }
+    function exportarDados() {
+        const a = document.createElement('a'); a.href = 'data:application/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(db));
+        a.download = 'junks_backup.json'; a.click();
+    }
+    function importarDados(e) {
+        const reader = new FileReader();
+        reader.onload = (ev) => { try { db = JSON.parse(ev.target.result); salvar(); location.reload(); } catch(err) { alert("Erro!"); } };
+        reader.readAsText(e.target.files[0]);
+    }
+    carregarTudo();
+</script>
+</body>
+</html>
