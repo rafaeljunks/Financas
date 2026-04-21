@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>Junks Finanças Elite v76</title>
+    <title>Junks Finanças Elite Pro v78</title>
     
     <link rel="apple-touch-icon" href="https://lh3.googleusercontent.com/pw/AP1GczM3k-nUvD-f98O6i4Vj3N-n3T5_9O_W6L4z_N_X-R_T_w_F_T_F_V_F_T_F=w256-h256-no?authuser=0">
     <link rel="icon" type="image/png" href="https://lh3.googleusercontent.com/pw/AP1GczM3k-nUvD-f98O6i4Vj3N-n3T5_9O_W6L4z_N_X-R_T_w_F_T_F_V_F_T_F=w256-h256-no?authuser=0">
@@ -34,7 +34,7 @@
         
         .main-balance { text-align: center; padding: 20px 0; background: radial-gradient(circle at top, rgba(0, 242, 152, 0.1) 0%, transparent 80%); border-radius: 30px; margin-bottom: 8px; }
         .main-balance h1 { font-size: 36px; margin: 4px 0; color: var(--accent); font-weight: 800; }
-        .main-balance small { font-size: 10px; }
+        .main-balance small { font-size: 10px; font-weight:700; color: var(--sub); }
 
         .card { background: var(--card); padding: 20px; border-radius: 24px; margin-bottom: 16px; border: 1px solid var(--border); box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
         h3 { margin: 0 0 16px 0; font-size: 11px; color: var(--sub); text-transform: uppercase; letter-spacing: 1.5px; }
@@ -45,7 +45,7 @@
         .btn-lancar { width: 110px; padding: 12px; font-size: 14px; background: linear-gradient(135deg, var(--accent), #00c878); }
         .btn-small { width: auto; padding: 8px 12px; font-size: 11px; border-radius: 10px; font-weight: 700; margin-right: 5px; border: 1px solid rgba(255,255,255,0.05); }
         
-        .month-nav { display: flex; align-items: center; justify-content: space-between; background: var(--card); padding: 6px 12px; border-radius: 18px; border: 1px solid var(--border); margin-bottom: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+        .month-nav { display: flex; align-items: center; justify-content: space-between; background: var(--card); padding: 6px 12px; border-radius: 18px; border: 1px solid var(--border); margin-bottom: 16px; }
         .month-nav button { width: 34px; height: 34px; background: rgba(255,255,255,0.05); border-radius: 10px; padding: 0; color: var(--accent); font-size: 16px; display: flex; align-items: center; justify-content: center; }
         .month-nav input { flex: 1; text-align: center; border: none; background: transparent; font-size: 16px; font-weight: 400; margin: 0; padding: 0; color: #fff; }
 
@@ -454,7 +454,6 @@
     function delConta(id) { if(confirm("Excluir conta corrente?")) { db.contas = db.contas.filter(x => x.id !== id); salvar(); } }
     function limparHistoricoConta(id) { if(confirm("Limpar histórico da conta?")) { const i = db.contas.find(x => x.id === id); if(i) { i.history = []; salvar(); } } }
 
-    /* FUNÇÕES DE TRANSFERÊNCIA UNIVERSAL */
     function abrirModalTransferencia() {
         let optsOrigem = '<option value="" disabled selected>De onde vai sair...</option>';
         if (db.contas && db.contas.length > 0) {
@@ -555,7 +554,6 @@
         fecharModalTransferencia();
     }
 
-
     function abrirModalCartao(idx = null) {
         document.getElementById("modalCartao").style.display = "flex";
         const btnEx = document.getElementById("btnExcluirCartao");
@@ -583,7 +581,7 @@
         const c = { id: idx !== "" ? db.cartoes[idx].id : Date.now(), nome: document.getElementById("cfgCartaoNome").value || "Cartão", limite: parseFloat(document.getElementById("cfgCartaoLimite").value) || 0, fech: document.getElementById("cfgCartaoFech").value, venc: document.getElementById("cfgCartaoVenc").value, cor: selectedColor, bandeira: document.getElementById("cfgCartaoBandeira").value };
         if(idx !== "") db.cartoes[idx] = c; else db.cartoes.push(c); salvar(); fecharModalCartao();
     }
-    
+
     function fecharModalCartao() { document.getElementById("modalCartao").style.display = "none"; }
     function excluirCartao() { const idx = document.getElementById("editCartaoIdx").value; db.cartoes.splice(idx, 1); salvar(); fecharModalCartao(); }
 
@@ -728,7 +726,7 @@
             fecharModalPagarAvulso();
         }
     }
-    
+
     function fecharModalPagarFatura() { document.getElementById('modalPagarFatura').style.display = 'none'; }
 
     function pagarFaturaInteira(cartaoId) { 
@@ -766,65 +764,67 @@
         salvar();
         fecharModalPagarFatura();
     }
-    
+
     function salvar() { if(userUid) { firebaseDb.ref('users/' + userUid).set(db); localStorage.setItem("JUNKS_FIN_LOCAL_BACKUP", JSON.stringify(db)); } render(); }
 
     function exportarCSV() {
-    try {
-        const mesAtual = document.getElementById("mesSelecao").value;
-        const itens = db.meses[mesAtual]?.itens || [];
-        let csvContent = "\uFEFFData/Descricao;Tipo;Valor;Status\n";
-        
-        itens.forEach(i => {
-            const tipo = i.cat === 'fixo' ? 'Fixo' : (i.cat === 'parc' ? 'Parcelado' : 'Único');
-            const valorFormatado = (-i.v).toFixed(2).replace('.', ',');
-            const status = i.p ? 'Concluido' : 'Pendente';
-            csvContent += `${i.d.replace(/;/g, ',')};${tipo};${valorFormatado};${status}\n`;
-        });
-        
-        const nomeArquivo = `Extrato_Junks_${mesAtual}.csv`;
-        
-        // Nova abordagem à prova de falhas: Data URI (Bypass no bug do Android)
-        const dataUri = "data:text/csv;charset=utf-8," + encodeURIComponent(csvContent);
-        
-        const a = document.createElement('a');
-        a.style.display = 'none';
-        a.setAttribute("href", dataUri);
-        a.setAttribute("download", nomeArquivo);
-        
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        
-    } catch (erro) {
-        alert("Erro ao exportar CSV: " + erro);
+        try {
+            const mesAtual = document.getElementById("mesSelecao").value;
+            const itens = db.meses[mesAtual]?.itens || [];
+            let csvContent = "\uFEFFData/Descricao;Tipo;Valor;Status\n";
+            
+            itens.forEach(i => {
+                const tipo = i.cat === 'fixo' ? 'Fixo' : (i.cat === 'parc' ? 'Parcelado' : 'Único');
+                const valorFormatado = (-i.v).toFixed(2).replace('.', ',');
+                const status = i.p ? 'Concluido' : 'Pendente';
+                csvContent += `${i.d.replace(/;/g, ',')};${tipo};${valorFormatado};${status}\n`;
+            });
+            
+            const nomeArquivo = `Extrato_Junks_${mesAtual}.csv`;
+            
+            // Codifica em Base64 e força como binário para o Android não tentar ler
+            const base64Data = btoa(unescape(encodeURIComponent(csvContent)));
+            const dataUri = "data:application/octet-stream;base64," + base64Data;
+            
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = dataUri;
+            a.download = nomeArquivo;
+            
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            
+        } catch (erro) {
+            alert("Erro ao exportar CSV: " + erro);
+        }
     }
-}
 
-function exportarDados() { 
-    try {
-        const mesAtual = document.getElementById("mesSelecao").value;
-        const dataStr = JSON.stringify(db, null, 2); 
-        const nomeArquivo = `junks_elite_${mesAtual}.json`;
-        
-        // Nova abordagem à prova de falhas: Data URI
-        const dataUri = "data:application/json;charset=utf-8," + encodeURIComponent(dataStr);
-        
-        const a = document.createElement('a');
-        a.style.display = 'none';
-        a.setAttribute("href", dataUri);
-        a.setAttribute("download", nomeArquivo);
-        
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        
-    } catch (erro) {
-        alert("Erro ao exportar Backup: " + erro);
+    function exportarDados() { 
+        try {
+            const mesAtual = document.getElementById("mesSelecao").value;
+            const dataStr = JSON.stringify(db, null, 2); 
+            const nomeArquivo = `junks_elite_${mesAtual}.json`;
+            
+            // Codifica em Base64 e força como binário
+            const base64Data = btoa(unescape(encodeURIComponent(dataStr)));
+            const dataUri = "data:application/octet-stream;base64," + base64Data;
+            
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = dataUri;
+            a.download = nomeArquivo;
+            
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            
+        } catch (erro) {
+            alert("Erro ao exportar Backup: " + erro);
+        }
     }
-}
 
-        
+    function importarDados(input) { const file = input.files[0]; if(!file) return; const reader = new FileReader(); reader.onload = function(e) { try { const iD = JSON.parse(e.target.result); if(confirm("Substituir dados atuais?")) { db = iD; salvar(); } } catch(err) { alert("Erro!"); } }; reader.readAsText(file); input.value = ''; }
 
     function toggleFatura(id) { faturasVisiveis[id] = !faturasVisiveis[id]; render(); }
 
