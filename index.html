@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>Junks Finanças Elite Pro v78</title>
+    <title>Junks Finanças Elite Pro v79</title>
     
     <link rel="apple-touch-icon" href="https://lh3.googleusercontent.com/pw/AP1GczM3k-nUvD-f98O6i4Vj3N-n3T5_9O_W6L4z_N_X-R_T_w_F_T_F_V_F_T_F=w256-h256-no?authuser=0">
     <link rel="icon" type="image/png" href="https://lh3.googleusercontent.com/pw/AP1GczM3k-nUvD-f98O6i4Vj3N-n3T5_9O_W6L4z_N_X-R_T_w_F_T_F_V_F_T_F=w256-h256-no?authuser=0">
@@ -767,64 +767,74 @@
 
     function salvar() { if(userUid) { firebaseDb.ref('users/' + userUid).set(db); localStorage.setItem("JUNKS_FIN_LOCAL_BACKUP", JSON.stringify(db)); } render(); }
 
-    function exportarCSV() {
+    // O CÉREBRO DA EXPORTAÇÃO NO ANDROID/PWA
+    async function executarDownload(conteudo, nomeArquivo, mimeType) {
         try {
-            const mesAtual = document.getElementById("mesSelecao").value;
-            const itens = db.meses[mesAtual]?.itens || [];
-            let csvContent = "\uFEFFData/Descricao;Tipo;Valor;Status\n";
+            const file = new File([conteudo], nomeArquivo, { type: mimeType });
             
-            itens.forEach(i => {
-                const tipo = i.cat === 'fixo' ? 'Fixo' : (i.cat === 'parc' ? 'Parcelado' : 'Único');
-                const valorFormatado = (-i.v).toFixed(2).replace('.', ',');
-                const status = i.p ? 'Concluido' : 'Pendente';
-                csvContent += `${i.d.replace(/;/g, ',')};${tipo};${valorFormatado};${status}\n`;
-            });
-            
-            const nomeArquivo = `Extrato_Junks_${mesAtual}.csv`;
-            
-            // Codifica em Base64 e força como binário para o Android não tentar ler
-            const base64Data = btoa(unescape(encodeURIComponent(csvContent)));
-            const dataUri = "data:application/octet-stream;base64," + base64Data;
-            
+            // Tenta acionar o menu nativo de compartilhamento do aparelho (O Pulo do Gato)
+            if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                await navigator.share({
+                    files: [file],
+                    title: 'Junks Finanças',
+                    text: 'Aqui está o seu backup mais recente do sistema.'
+                });
+                return; // Encerra se a tela de compartilhamento funcionou
+            }
+        } catch (erro) {
+            console.log("Compartilhamento nativo cancelado ou falhou:", erro);
+        }
+
+        // Se o compartilhamento falhar (ou se for pelo PC), tenta forçar o download tradicional
+        try {
+            const blob = new Blob([conteudo], { type: mimeType });
+            const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.style.display = 'none';
-            a.href = dataUri;
+            a.href = url;
             a.download = nomeArquivo;
-            
             document.body.appendChild(a);
             a.click();
-            document.body.removeChild(a);
-            
+            setTimeout(() => { document.body.removeChild(a); window.URL.revokeObjectURL(url); }, 2000);
         } catch (erro) {
-            alert("Erro ao exportar CSV: " + erro);
+            alert("O seu navegador bloqueou o download: " + erro.message);
         }
+    }
+
+    function exportarCSV() {
+        const mesAtual = document.getElementById("mesSelecao").value;
+        const itens = db.meses[mesAtual]?.itens || [];
+        let csvContent = "\uFEFFData/Descricao;Tipo;Valor;Status\n";
+        
+        itens.forEach(i => {
+            const tipo = i.cat === 'fixo' ? 'Fixo' : (i.cat === 'parc' ? 'Parcelado' : 'Único');
+            const valorFormatado = (-i.v).toFixed(2).replace('.', ',');
+            const status = i.p ? 'Concluido' : 'Pendente';
+            csvContent += `${i.d.replace(/;/g, ',')};${tipo};${valorFormatado};${status}\n`;
+        });
+        
+        executarDownload(csvContent, `Extrato_Junks_${mesAtual}.csv`, 'text/csv');
     }
 
     function exportarDados() { 
-        try {
-            const mesAtual = document.getElementById("mesSelecao").value;
-            const dataStr = JSON.stringify(db, null, 2); 
-            const nomeArquivo = `junks_elite_${mesAtual}.json`;
-            
-            // Codifica em Base64 e força como binário
-            const base64Data = btoa(unescape(encodeURIComponent(dataStr)));
-            const dataUri = "data:application/octet-stream;base64," + base64Data;
-            
-            const a = document.createElement('a');
-            a.style.display = 'none';
-            a.href = dataUri;
-            a.download = nomeArquivo;
-            
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            
-        } catch (erro) {
-            alert("Erro ao exportar Backup: " + erro);
-        }
+        const mesAtual = document.getElementById("mesSelecao").value;
+        const dataStr = JSON.stringify(db, null, 2); 
+        executarDownload(dataStr, `junks_elite_${mesAtual}.json`, 'application/json');
     }
 
-    function importarDados(input) { const file = input.files[0]; if(!file) return; const reader = new FileReader(); reader.onload = function(e) { try { const iD = JSON.parse(e.target.result); if(confirm("Substituir dados atuais?")) { db = iD; salvar(); } } catch(err) { alert("Erro!"); } }; reader.readAsText(file); input.value = ''; }
+    function importarDados(input) { 
+        const file = input.files[0]; 
+        if(!file) return; 
+        const reader = new FileReader(); 
+        reader.onload = function(e) { 
+            try { 
+                const iD = JSON.parse(e.target.result); 
+                if(confirm("Substituir dados atuais pelo backup?")) { db = iD; salvar(); } 
+            } catch(err) { alert("Erro ao importar o arquivo!"); } 
+        }; 
+        reader.readAsText(file); 
+        input.value = ''; 
+    }
 
     function toggleFatura(id) { faturasVisiveis[id] = !faturasVisiveis[id]; render(); }
 
