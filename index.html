@@ -783,21 +783,18 @@
         });
         
         const nomeArquivo = `Extrato_Junks_${mesAtual}.csv`;
-        const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-        const url = URL.createObjectURL(blob);
+        
+        // Nova abordagem à prova de falhas: Data URI (Bypass no bug do Android)
+        const dataUri = "data:text/csv;charset=utf-8," + encodeURIComponent(csvContent);
         
         const a = document.createElement('a');
         a.style.display = 'none';
-        a.href = url;
-        a.download = nomeArquivo;
-        document.body.appendChild(a); // Coloca o botão invisível na tela
-        a.click(); // Clica automaticamente
+        a.setAttribute("href", dataUri);
+        a.setAttribute("download", nomeArquivo);
         
-        // O segredo para o PWA: esperar 1 segundo antes de destruir o arquivo temporário
-        setTimeout(() => {
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-        }, 1000);
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
         
     } catch (erro) {
         alert("Erro ao exportar CSV: " + erro);
@@ -810,21 +807,17 @@ function exportarDados() {
         const dataStr = JSON.stringify(db, null, 2); 
         const nomeArquivo = `junks_elite_${mesAtual}.json`;
         
-        const blob = new Blob([dataStr], { type: "application/json" });
-        const url = URL.createObjectURL(blob);
+        // Nova abordagem à prova de falhas: Data URI
+        const dataUri = "data:application/json;charset=utf-8," + encodeURIComponent(dataStr);
         
         const a = document.createElement('a');
         a.style.display = 'none';
-        a.href = url;
-        a.download = nomeArquivo;
+        a.setAttribute("href", dataUri);
+        a.setAttribute("download", nomeArquivo);
+        
         document.body.appendChild(a);
         a.click();
-        
-        // Espera 1 segundo para o Android capturar o download
-        setTimeout(() => {
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-        }, 1000);
+        document.body.removeChild(a);
         
     } catch (erro) {
         alert("Erro ao exportar Backup: " + erro);
@@ -833,8 +826,6 @@ function exportarDados() {
 
         
 
-
-    
     function toggleFatura(id) { faturasVisiveis[id] = !faturasVisiveis[id]; render(); }
 
     function render() {
