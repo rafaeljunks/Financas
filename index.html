@@ -770,69 +770,68 @@
     function salvar() { if(userUid) { firebaseDb.ref('users/' + userUid).set(db); localStorage.setItem("JUNKS_FIN_LOCAL_BACKUP", JSON.stringify(db)); } render(); }
 
     function exportarCSV() {
-    const mesAtual = document.getElementById("mesSelecao").value;
-    const itens = db.meses[mesAtual]?.itens || [];
-    let csvContent = "\uFEFFData/Descricao;Tipo;Valor;Status\n";
-    
-    itens.forEach(i => {
-        const tipo = i.cat === 'fixo' ? 'Fixo' : (i.cat === 'parc' ? 'Parcelado' : 'Único');
-        csvContent += `${i.d.replace(/;/g, ',')};${tipo};${(-i.v).toFixed(2).replace('.', ',')};${i.p ? 'Concluido' : 'Pendente'}\n`;
-    });
-    
-    const nomeArquivo = `Extrato_Junks_${mesAtual}.csv`;
-    
-    // TENTATIVA 1: Compartilhamento nativo do celular (WhatsApp, Drive, etc)
     try {
-        const file = new File([csvContent], nomeArquivo, { type: "text/csv;charset=utf-8;" });
-        if (navigator.canShare && navigator.canShare({ files: [file] })) {
-            navigator.share({ files: [file], title: 'Extrato Junks Finanças' });
-            return; // Se der certo, para por aqui.
-        }
-    } catch(e) {
-        console.log("Compartilhamento nativo bloqueado. Forçando download...");
+        const mesAtual = document.getElementById("mesSelecao").value;
+        const itens = db.meses[mesAtual]?.itens || [];
+        let csvContent = "\uFEFFData/Descricao;Tipo;Valor;Status\n";
+        
+        itens.forEach(i => {
+            const tipo = i.cat === 'fixo' ? 'Fixo' : (i.cat === 'parc' ? 'Parcelado' : 'Único');
+            const valorFormatado = (-i.v).toFixed(2).replace('.', ',');
+            const status = i.p ? 'Concluido' : 'Pendente';
+            csvContent += `${i.d.replace(/;/g, ',')};${tipo};${valorFormatado};${status}\n`;
+        });
+        
+        const nomeArquivo = `Extrato_Junks_${mesAtual}.csv`;
+        const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+        const url = URL.createObjectURL(blob);
+        
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+        a.download = nomeArquivo;
+        document.body.appendChild(a); // Coloca o botão invisível na tela
+        a.click(); // Clica automaticamente
+        
+        // O segredo para o PWA: esperar 1 segundo antes de destruir o arquivo temporário
+        setTimeout(() => {
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }, 1000);
+        
+    } catch (erro) {
+        alert("Erro ao exportar CSV: " + erro);
     }
-
-    // TENTATIVA 2: Forçar download "injetando" o botão na tela (Resolve o bug do PWA)
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = nomeArquivo;
-    a.style.display = 'none'; // Esconde o botão
-    document.body.appendChild(a); // Coloca na tela (OBRIGATÓRIO PARA O CELULAR ACEITAR)
-    a.click(); // Clica
-    document.body.removeChild(a); // Remove da tela
-    URL.revokeObjectURL(url);
 }
 
 function exportarDados() { 
-    const mesAtual = document.getElementById("mesSelecao").value;
-    const dataStr = JSON.stringify(db, null, 2); 
-    const nomeArquivo = `junks_elite_${mesAtual}.json`;
-
-    // TENTATIVA 1: Compartilhamento nativo
     try {
-        const file = new File([dataStr], nomeArquivo, { type: "application/json" });
-        if (navigator.canShare && navigator.canShare({ files: [file] })) {
-            navigator.share({ files: [file], title: 'Backup Junks Finanças' });
-            return;
-        }
-    } catch(e) {
-        console.log("Compartilhamento nativo bloqueado. Forçando download...");
+        const mesAtual = document.getElementById("mesSelecao").value;
+        const dataStr = JSON.stringify(db, null, 2); 
+        const nomeArquivo = `junks_elite_${mesAtual}.json`;
+        
+        const blob = new Blob([dataStr], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+        a.download = nomeArquivo;
+        document.body.appendChild(a);
+        a.click();
+        
+        // Espera 1 segundo para o Android capturar o download
+        setTimeout(() => {
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }, 1000);
+        
+    } catch (erro) {
+        alert("Erro ao exportar Backup: " + erro);
     }
-
-    // TENTATIVA 2: Forçar download
-    const blob = new Blob([dataStr], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = nomeArquivo;
-    a.style.display = 'none';
-    document.body.appendChild(a); // OBRIGATÓRIO PARA PWA
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
 }
+
+        
 
 
     
