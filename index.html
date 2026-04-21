@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Junks Finanças Elite Pro</title>
+    
+    <link rel="apple-touch-icon" href="https://lh3.googleusercontent.com/pw/AP1GczM3k-nUvD-f98O6i4Vj3N-n3T5_9O_W6L4z_N_X-R_T_w_F_T_F_V_F_T_F=w256-h256-no?authuser=0">
+    <link rel="icon" type="image/png" href="https://lh3.googleusercontent.com/pw/AP1GczM3k-nUvD-f98O6i4Vj3N-n3T5_9O_W6L4z_N_X-R_T_w_F_T_F_V_F_T_F=w256-h256-no?authuser=0">
+    
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/matheuscuba/icones-bancos-brasileiros@1.1/dist/all.css">
+    
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+</head>
+<body>
+
+<div id="loginScreen">
+    <div class="login-box">
+        <h1 style="color: var(--blue); font-size: 26px; margin-bottom: 5px;">Junks Finanças</h1> 
+        <p style="color: var(--sub); font-size: 12px; margin-bottom: 25px;">Sincronização em Nuvem Ativada</p>
+        <input type="email" id="email" placeholder="E-mail">
+        <input type="password" id="password" placeholder="Senha">
+        <button onclick="autenticar()">Entrar / Registrar</button>
+        <p id="errorMsg" style="color: var(--danger); font-size: 12px; margin-top: 15px;"></p>
+    </div>
+</div>
+
+<div id="modalInv" class="modal"><div class="modal-content">
+    <h3>Novo Investimento</h3>
+    <input type="text" id="invNome" placeholder="Nome (ex: Tesouro, Ações)">
+    <input type="number" id="invSaldo" placeholder="Saldo Inicial">
+    <select id="invMoeda"><option value="BRL">Real (R$)</option><option value="EUR">Euro (€)</option><option value="USD">Dólar ($)</option></select>
+    <button onclick="salvarModalInv()">Salvar</button>
+    <button onclick="fecharModalInv()" class="btn-cancel">Fechar</button>
+</div></div>
+
+<div id="modalConta" class="modal"><div class="modal-content">
+    <h3>Nova Conta Corrente</h3>
+    <select id="ccIcon">
+        <option value="nubank">Nubank</option><option value="itau">Itaú</option><option value="bb">Banco do Brasil</option>
+        <option value="bradesco">Bradesco</option><option value="santander">Santander</option><option value="inter">Banco Inter</option>
+        <option value="c6">C6 Bank</option><option value="caixa">Caixa Econômica</option><option value="sicredi">Sicredi</option><option value="outro">Outro Banco</option>
+    </select>
+    <input type="text" id="ccNome" placeholder="Apelido da Conta">
+    <input type="number" id="ccSaldo" placeholder="Saldo Atual">
+    <button onclick="salvarModalConta()">Salvar</button>
+    <button onclick="fecharModalConta()" class="btn-cancel">Fechar</button>
+</div></div>
+
+<div id="modalTransferencia" class="modal"><div class="modal-content">
+    <h3>🔄 Transferência</h3>
+    <select id="transfOrigem"></select>
+    <select id="transfDestino"></select>
+    <input type="number" id="transfValor" placeholder="Valor a debitar">
+    <input type="number" id="transfValorConvertido" placeholder="Valor creditado no destino" style="display:none;">
+    <button onclick="salvarTransferencia()">Transferir</button>
+    <button onclick="fecharModalTransferencia()" class="btn-cancel">Cancelar</button>
+</div></div>
+
+<div id="modalPagarAvulso" class="modal"><div class="modal-content">
+    <h3>Pagar Lançamento</h3>
+    <p id="textoPagamentoAvulso"></p>
+    <select id="selectContaPagamentoAvulso"></select>
+    <button onclick="confirmarPagamentoAvulso()">Confirmar Pagamento</button>
+    <button onclick="fecharModalPagarAvulso()" class="btn-cancel">Cancelar</button>
+</div></div>
+
+<div id="modalPagarFatura" class="modal"><div class="modal-content">
+    <h3>Pagar Fatura</h3>
+    <p id="textoPagamentoFatura"></p>
+    <select id="selectContaPagamentoFatura"></select>
+    <button onclick="confirmarPagamentoFatura()">Confirmar Pagamento</button>
+    <button onclick="fecharModalPagarFatura()" class="btn-cancel">Cancelar</button>
+</div></div>
+
+<div id="modalCartao" class="modal"><div class="modal-content">
+    <h3 id="modalCartaoTitulo">Configurar Cartão</h3>
+    <input type="hidden" id="editCartaoIdx">
+    <div class="color-selector" id="cartaoColorSelector"></div>
+    <input type="text" id="cfgCartaoNome" placeholder="Nome do Cartão">
+    <select id="cfgCartaoBandeira">
+        <option value="mastercard">Mastercard</option><option value="visa">Visa</option>
+        <option value="amex">American Express</option><option value="elo">Elo</option><option value="outra">Outra</option>
+    </select>
+    <input type="number" id="cfgCartaoLimite" placeholder="Limite Total (R$)">
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+        <input type="number" id="cfgCartaoFech" placeholder="Dia Fechamento">
+        <input type="number" id="cfgCartaoVenc" placeholder="Dia Vencimento">
+    </div>
+    <button onclick="salvarConfigCartao()">Salvar</button>
+    <button onclick="fecharModalCartao()" class="btn-cancel">Cancelar</button>
+    <button id="btnExcluirCartao" onclick="excluirCartao()" class="btn-danger-link">Excluir</button>
+</div></div>
+
+<div class="container" id="app">
+    <div class="top-bar">
+        <div class="rates">
+            <div>🇪🇺 <span class="euro-label">1 EUR = </span><span id="euroTaxa">...</span><span id="euroVar"></span></div>
+            <div>🇺🇸 <span class="usd-label">1 USD = </span><span id="usdTaxa">...</span><span id="usdVar"></span></div>
+        </div>
+        <button onclick="auth.signOut()" class="btn-logout">Sair</button>
+    </div>
+
+    <div class="main-balance">
+        <small>SALDO DISPONÍVEL</small>
+        <h1 id="sobraDisplay">R$ 0,00</h1>
+    </div>
+    
+    <div class="month-nav">
+        <button onclick="mudarMes(-1)">❮</button>
+        <input type="month" id="mesSelecao" onchange="carregarTudo()">
+        <button onclick="mudarMes(1)">❯</button>
+    </div>
+
+    <div class="search-bar">
+        <span>🔍</span>
+        <input type="text" id="inputBusca" placeholder="Buscar lançamento..." oninput="filtrarApp()">
+    </div>
+
+    <div class="card">
+        <h3>📈 Patrimônio Global</h3>
+        <div class="patrimonio-grid">
+            <div><small>TOTAL BRL</small><br><span id="patBRL" class="val-brl">R$ 0,00</span></div>
+            <div class="border-left"><small>TOTAL USD</small><br><span id="patUSD" class="val-usd">$ 0.00</span><br><small id="patUSD_Convertido" class="sub-val"></small></div>
+            <div class="border-left"><small>TOTAL EUR</small><br><span id="patEUR" class="val-eur">€ 0,00</span><br><small id="patEUR_Convertido" class="sub-val"></small></div>
+        </div>
+        <div id="investList"></div>
+        <button onclick="abrirModalInv()" class="btn-secondary">+ Novo Investimento</button>
+    </div>
+
+    <div class="card">
+        <h3>💳 Contas Correntes</h3>
+        <div id="contasList"></div>
+        <div style="display: flex; gap: 8px;">
+            <button onclick="abrirModalConta()" class="btn-secondary-green">+ Nova Conta</button>
+            <button onclick="abrirModalTransferencia()" class="btn-secondary-blue">🔄 Transferir</button>
+        </div>
+    </div>
+
+    <div class="card">
+        <h3>📊 Ajuste de Teto</h3>
+        <div class="teto-ajuste">
+            <button onclick="ajustarTetoOp('sub')" class="btn-teto-sub">-</button>
+            <input type="number" id="limiteInput" placeholder="Valor Principal" oninput="salvarAjustes()">
+            <button onclick="ajustarTetoOp('add')" class="btn-teto-add">+</button>
+        </div>
+    </div>
+
+    <div id="containerCartoes"></div>
+    <div class="center"><button onclick="abrirModalCartao()" class="btn-dashed">+ Novo Cartão</button></div>
+
+    <div class="card" id="areaNovoLancamento">
+        <h3>💸 Novo Lançamento</h3>
+        <select id="metodoPag"></select>
+        <input type="text" id="desc" placeholder="Descrição">
+        <div class="form-grid">
+            <input type="number" id="val" placeholder="Valor">
+            <select id="parcelas"><option value="1">À vista</option></select>
+        </div>
+        <div class="form-row">
+            <label class="checkbox-label"><input type="checkbox" id="isFixo"> fixo mensal</label>
+            <button onclick="addGasto()" class="btn-lancar">Lançar</button>
+        </div>
+    </div>
+
+    <div id="containerGastos"></div>
+    <div id="resumoTotais" class="resumo-final"></div>
+
+    <div class="card footer-card">
+        <h3>💾 Segurança e Relatórios</h3>
+        <div class="footer-grid">
+            <button class="btn-backup-excel" onclick="exportarCSV()">📥 Extrato Excel</button>
+            <button class="btn-backup-json" onclick="exportarDados()">📤 Backup JSON</button>
+            <button class="btn-backup-import" onclick="document.getElementById('fileInput').click()">📥 Importar</button>
+        </div>
+        <input type="file" id="fileInput" style="display:none" onchange="importarDados(this)" accept=".json">
+    </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
