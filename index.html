@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>Junks Finanças Elite v71</title>
+    <title>Junks Finanças Elite v74</title>
     
     <link rel="apple-touch-icon" href="https://lh3.googleusercontent.com/pw/AP1GczM3k-nUvD-f98O6i4Vj3N-n3T5_9O_W6L4z_N_X-R_T_w_F_T_F_V_F_T_F=w256-h256-no?authuser=0">
     <link rel="icon" type="image/png" href="https://lh3.googleusercontent.com/pw/AP1GczM3k-nUvD-f98O6i4Vj3N-n3T5_9O_W6L4z_N_X-R_T_w_F_T_F_V_F_T_F=w256-h256-no?authuser=0">
@@ -614,7 +614,7 @@
     function addGasto() {
         const d = document.getElementById("desc").value, v = parseFloat(document.getElementById("val").value), p = parseInt(document.getElementById("parcelas").value), metodo = document.getElementById("metodoPag").value, fixo = document.getElementById("isFixo").checked, inputMes = document.getElementById("mesSelecao").value;
         
-        if(!metodo || metodo === "conta") return alert("Por favor, selecione uma Conta Corrente ou Cartão cadastrado.");
+        if(!metodo) return alert("Por favor, selecione de onde vai sair ou marque como Avulso.");
         if(!d || isNaN(v)) return alert("Preencha descrição e valor.");
         
         const valorParcela = v/p;
@@ -622,6 +622,7 @@
         
         if(fixo && !db.fixosMestre.some(x => x.d === d)) { db.fixosMestre.push({ ...novoGasto, startMes: inputMes }); }
         
+        // Desconta da conta apenas se for um metodo "cc_"
         if(metodo.startsWith('cc_')) {
             const ccId = metodo.split('_')[1];
             const cc = (db.contas || []).find(c => c.id == ccId);
@@ -769,6 +770,7 @@
         });
 
         let selH = `<option value="" disabled selected>🏦 Selecione de onde vai sair...</option>`;
+        selH += `<option value="avulso">⏳ Avulso (Sem debitar conta)</option>`;
         
         if (db.contas && db.contas.length > 0) {
             selH += `<optgroup label="💳 Contas Correntes">`;
@@ -857,7 +859,7 @@
                     <span class="config-btn" onclick="abrirModalCartao(${idx})">⚙️</span>
                     ${statusHtml}
                     
-                    <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-top: 20px;">
+                    <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-top: 25px;">
                         <div>
                             <div style="margin-bottom: 6px;">${getBandeiraLogo(c.bandeira)}</div>
                             <div style="font-size:12px; font-weight:700;">${c.nome.toUpperCase()}</div>
@@ -888,7 +890,7 @@
         });
         selectMetodo.innerHTML = selH;
         
-        const outros = (mesAtivo.itens || []).filter(i => i.metodo === 'conta' || i.metodo.startsWith('cc_'));
+        const outros = (mesAtivo.itens || []).filter(i => i.metodo === 'conta' || i.metodo.startsWith('cc_') || i.metodo === 'pendente' || i.metodo === 'avulso');
         if(outros.length > 0) {
             containerGastos.innerHTML = `<div class="section-title">Lançamentos Avulsos / Contas Correntes</div>`;
             outros.forEach(i => { 
@@ -901,6 +903,8 @@
                         const bS = bankStyles[b.icon || 'outro'];
                         nomeTag = `<span class="tag-icon" style="background:${bS.c}; color: ${bS.t};">${bS.svg}</span>` + nomeTag + ` • ${b.b.toUpperCase()}`;
                     }
+                } else if (i.metodo === 'pendente' || i.metodo === 'avulso') {
+                    nomeTag = `⏳ ` + nomeTag + ` • AVULSO`;
                 }
 
                 containerGastos.innerHTML += `
