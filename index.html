@@ -1,0 +1,1805 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Junks Finanças Elite Pro</title>
+    
+    <link rel="apple-touch-icon" href="https://lh3.googleusercontent.com/pw/AP1GczM3k-nUvD-f98O6i4Vj3N-n3T5_9O_W6L4z_N_X-R_T_w_F_T_F_V_F_T_F=w256-h256-no?authuser=0">
+    <link rel="icon" type="image/png" href="https://lh3.googleusercontent.com/pw/AP1GczM3k-nUvD-f98O6i4Vj3N-n3T5_9O_W6L4z_N_X-R_T_w_F_T_F_V_F_T_F=w256-h256-no?authuser=0">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/matheuscuba/icones-bancos-brasileiros@1.1/dist/all.css">
+    
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+
+    <style>
+        :root {
+            --bg: #0b101b; --card: #1a2234; --accent: #00f298;
+            --blue: #3b82f6; --danger: #ff5252; --text: #f8fafc; --sub: #94a3b8;
+            --euro: #ffcc00; --border: rgba(255, 255, 255, 0.12);
+            --veloe: #C3D600;
+            --crypto: #f59e0b; 
+            --car: #f97316; 
+        }
+        * { -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; outline: none; box-sizing: border-box; }
+        input, select { -webkit-user-select: text; user-select: text; }
+        input[type="date"]::-webkit-calendar-picker-indicator, input[type="time"]::-webkit-calendar-picker-indicator { filter: invert(1); opacity: 0.6; }
+
+        body { 
+            font-family: 'Inter', -apple-system, system-ui, sans-serif; 
+            background-color: var(--bg); color: var(--text); margin: 0; 
+            padding: env(safe-area-inset-top) 16px 100px 16px; 
+        }
+
+        /* AJUSTE RESPONSIVO DESKTOP / CELULAR */
+        .container { 
+            max-width: 480px; 
+            margin: auto; 
+            display: none; 
+            transition: max-width 0.3s ease;
+        }
+
+        @media (min-width: 1024px) {
+            .container { max-width: 1200px; }
+            .desktop-grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 20px;
+                align-items: start;
+            }
+            .fii-cripto-grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 16px;
+            }
+            .main-balance { padding: 40px 0 !important; }
+            .main-balance h1 { font-size: 52px !important; }
+        }
+        
+        /* MENU LATERAL - 3 RISCOS */
+        #sideMenu { position: fixed; top: 0; left: -300px; width: 260px; height: 100%; background: var(--card); z-index: 10000; transition: 0.3s; box-shadow: 5px 0 25px rgba(0,0,0,0.8); border-right: 1px solid var(--border); padding: 30px 20px; display: flex; flex-direction: column; gap: 15px; overflow-y: auto; }
+        #sideMenu.open { left: 0; }
+        .menu-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 9999; display: none; backdrop-filter: blur(3px); }
+        .menu-item { padding: 15px; border-radius: 14px; background: rgba(255,255,255,0.05); font-weight: 800; font-size: 14px; color: white; cursor: pointer; display: flex; align-items: center; gap: 10px; border: 1px solid var(--border); transition: 0.2s;}
+        .menu-item.active { background: var(--blue); border-color: var(--blue); color: white !important; }
+
+        .main-balance { text-align: center; padding: 20px 0; background: radial-gradient(circle at top, rgba(0, 242, 152, 0.1) 0%, transparent 80%); border-radius: 30px; margin-bottom: 20px; }
+        .main-balance h1 { font-size: 36px; margin: 4px 0; color: var(--accent); font-weight: 800; }
+        .main-balance small { font-size: 10px; font-weight:700; color: var(--sub); }
+
+        .card { background: var(--card); padding: 20px; border-radius: 24px; margin-bottom: 16px; border: 1px solid var(--border); box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
+        h3 { margin: 0 0 16px 0; font-size: 11px; color: var(--sub); text-transform: uppercase; letter-spacing: 1.5px; }
+        input, select, textarea { width: 100%; padding: 14px; margin-bottom: 12px; border-radius: 14px; border: 1px solid var(--border); background: #0b101b; color: white; font-size: 16px; font-family: inherit;}
+        button { width: 100%; padding: 15px; border-radius: 14px; border: none; background: var(--accent); color: #000; font-weight: 800; cursor: pointer; transition: 0.2s; }
+        button:active { transform: scale(0.97); }
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
+        
+        .btn-lancar { width: 110px; padding: 12px; font-size: 14px; background: linear-gradient(135deg, var(--accent), #00c878); }
+        .btn-small { width: auto; padding: 8px 12px; font-size: 11px; border-radius: 10px; font-weight: 700; margin-right: 5px; border: 1px solid rgba(255,255,255,0.05); }
+        
+        .month-nav { display: flex; align-items: center; justify-content: space-between; background: var(--card); padding: 6px 12px; border-radius: 18px; border: 1px solid var(--border); margin-bottom: 16px; }
+        .month-nav button { width: 34px; height: 34px; background: rgba(255,255,255,0.05); border-radius: 10px; padding: 0; color: var(--accent); font-size: 16px; display: flex; align-items: center; justify-content: center; }
+        .month-nav input { flex: 1; text-align: center; border: none; background: transparent; font-size: 16px; font-weight: 400; margin: 0; padding: 0; color: #fff; }
+
+        .item { display: flex; justify-content: space-between; align-items: center; padding: 14px; background: rgba(255,255,255,0.02); border-radius: 16px; margin-bottom: 10px; border: 1px solid var(--border); transition: 0.3s; }
+        .item-info { display: flex; flex-direction: column; gap: 4px; }
+        .item-value-box { display: flex; align-items: center; gap: 8px; }
+        
+        .bank-item { padding: 14px; background: rgba(255,255,255,0.03); border-radius: 18px; margin-bottom: 10px; border: 1px solid var(--border); border-left-width: 6px !important; }
+        .bank-brl { border-left-color: var(--accent) !important; }
+        .bank-eur { border-left-color: var(--euro) !important; }
+        .bank-usd { border-left-color: var(--blue) !important; } 
+
+        .history-line { font-size: 9px; color: var(--sub); display: block; margin-top: -6px; margin-bottom: 10px; opacity: 0.7; font-weight: 400; white-space: nowrap; overflow-x: auto; padding-bottom: 4px; }
+        .history-tag { background: rgba(255,255,255,0.05); padding: 2px 5px; border-radius: 4px; margin-right: 4px; border: 1px solid rgba(255,255,255,0.05); }
+
+        .tag { font-size: 8px; padding: 2px 6px; border-radius: 4px; font-weight: 900; width: fit-content; display: flex; align-items: center; }
+        .tag-fixo { background: rgba(0, 242, 152, 0.2); color: var(--accent); }
+        .tag-unico { background: rgba(148, 163, 184, 0.15); color: var(--sub); }
+        .tag-parc { background: rgba(59, 130, 246, 0.2); color: var(--blue); }
+
+        .cartao-fisico { border-radius: 20px; padding: 18px; color: white; position: relative; margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.1); min-height: 140px; overflow: hidden; }
+        .config-btn { position: absolute; top: 12px; right: 12px; font-size: 16px; opacity: 0.6; cursor: pointer; z-index: 2; }
+        .limit-bar-bg { width: 100%; height: 6px; background: rgba(255,255,255,0.15); border-radius: 3px; margin: 10px 0; overflow: hidden; }
+        .limit-bar-fill { height: 100%; background: var(--accent); transition: width 0.4s ease; }
+        .limit-bar-fill.danger { background: var(--danger); }
+        .status-fatura { position: absolute; top: 16px; left: 16px; font-size: 9px; font-weight: 800; padding: 4px 8px; border-radius: 6px; text-transform: uppercase; z-index: 2; }
+        .status-aberta { background: rgba(59, 130, 246, 0.2); color: var(--blue); border: 1px solid var(--blue); }
+        .status-fechada { background: rgba(255, 204, 0, 0.2); color: var(--euro); border: 1px solid var(--euro); }
+        .status-melhor-dia { background: rgba(0, 242, 152, 0.2); color: var(--accent); border: 1px solid var(--accent); }
+        .btn-quick-add { position: absolute; bottom: 18px; right: 18px; width: 32px; height: 32px; border-radius: 10px; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.2); color: white; font-size: 20px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; backdrop-filter: blur(4px); padding: 0; z-index: 2; }
+        .btn-pagar-card-inline { background: rgba(0, 242, 152, 0.15); color: var(--accent); font-size: 10px; padding: 8px; border-radius: 8px; font-weight: 800; border: 1px dashed var(--accent); cursor: pointer; width: 100%; margin-top: 12px; transition: 0.2s; }
+        .btn-add-saldo-inline { background: rgba(255, 204, 0, 0.15); color: var(--euro); font-size: 10px; padding: 8px; border-radius: 8px; font-weight: 800; border: 1px dashed var(--euro); cursor: pointer; width: 100%; margin-top: 12px; transition: 0.2s; }
+
+        .modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.92); z-index:20000; align-items:center; justify-content:center; backdrop-filter: blur(8px); }
+        .modal-content { background:var(--card); width:88%; max-height: 90vh; overflow-y: auto; padding:25px; border-radius:28px; border: 1px solid var(--border); }
+
+        .color-selector { display: flex; gap: 8px; margin-bottom: 15px; justify-content: center; flex-wrap: wrap; }
+        .color-opt { width: 30px; height: 30px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; transition: 0.2s; }
+        .color-opt.active { border-color: #fff; transform: scale(1.15); }
+
+        .section-title { font-size: 11px; color: var(--blue); margin: 25px 0 10px 5px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; }
+        .resumo-final { margin-top: 25px; padding: 22px; background: rgba(255,255,255,0.02); border-radius: 24px; border: 1px dashed rgba(148, 163, 184, 0.3); }
+        .resumo-line { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 8px; color: var(--sub); }
+        .btn-backup { background: rgba(255,255,255,0.05); color: var(--text); font-size: 12px; padding: 12px; border-radius: 12px; }
+
+        #loginScreen { position: fixed; inset: 0; background: var(--bg); display: flex; align-items: center; justify-content: center; z-index: 99999; padding: 20px; }
+        .login-box { background: var(--card); padding: 30px; border-radius: 28px; width: 100%; max-width: 400px; text-align: center; border: 1px solid var(--border); box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
+        .login-box button { background: var(--blue); color: white; }
+
+        .btn-check { background: none; border: none; padding: 0; font-size: 16px; cursor: pointer; margin-right: 12px; opacity: 0.9; width: auto; }
+        .badge-pago { color: var(--accent); font-size: 11px; font-weight: 800; }
+        
+        .bank-icon-box { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; margin-right: 12px; flex-shrink: 0; overflow: hidden; font-size: 20px; }
+        .bank-icon-box svg { width: 20px; height: 20px; }
+        .tag-icon { display:inline-flex; align-items:center; justify-content:center; width:14px; height:14px; border-radius:50%; margin-right:4px; overflow: hidden; vertical-align: middle; font-size: 8px; }
+        .tag-icon svg { width: 8px; height: 8px; }
+
+        .premium-dash-card { border-radius: 24px; padding: 25px; margin-bottom: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); backdrop-filter: blur(10px); }
+        .fii-dashboard-card { background: linear-gradient(145deg, rgba(30,58,138,0.3) 0%, rgba(15,23,42,0.6) 100%); border: 1px solid rgba(59,130,246,0.2); }
+        .cripto-dashboard-card { background: linear-gradient(145deg, rgba(245,158,11,0.15) 0%, rgba(15,23,42,0.8) 100%); border: 1px solid rgba(245,158,11,0.3); }
+        .car-dashboard-card { background: linear-gradient(145deg, rgba(249,115,22,0.15) 0%, rgba(15,23,42,0.8) 100%); border: 1px solid rgba(249,115,22,0.3); }
+        .veloe-dashboard-card { background: linear-gradient(145deg, rgba(195,214,0,0.2) 0%, rgba(15,23,42,0.8) 100%); border: 1px solid rgba(195,214,0,0.3); text-align: center; }
+        
+        .dash-row { display: flex; justify-content: space-between; margin-bottom: 18px; align-items: flex-end; }
+        .dash-label { font-size: 10px; color: var(--sub); display: block; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700; }
+        .dash-val { font-size: 18px; font-weight: 900; color: white; letter-spacing: -0.5px; }
+        .dash-val-big { font-size: 28px; font-weight: 900; color: white; letter-spacing: -0.5px; margin: 5px 0; }
+        .dash-badge { font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 8px; margin-left: 6px; display: inline-flex; align-items: center; }
+        
+        .badge-red { background: rgba(255,82,82,0.15); color: var(--danger); border: 1px solid rgba(255,82,82,0.3); }
+        .badge-green { background: rgba(0,242,152,0.15); color: var(--accent); border: 1px solid rgba(0,242,152,0.3); }
+
+        .asset-card-item { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 20px; padding: 18px; margin-bottom: 14px; transition: transform 0.2s; backdrop-filter: blur(5px); }
+        .asset-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.04); padding-bottom: 15px; }
+        
+        .fii-icon-box { background: linear-gradient(135deg, var(--blue), #1e3a8a); color: white; width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 14px; margin-right: 14px; box-shadow: 0 4px 10px rgba(59,130,246,0.3); }
+        .cripto-icon-box { background: linear-gradient(135deg, var(--crypto), #b45309); color: white; width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 14px; margin-right: 14px; box-shadow: 0 4px 10px rgba(245,158,11,0.3); }
+
+        .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 15px; text-align: left; }
+        .fii-proventos-box { background: linear-gradient(90deg, rgba(0,242,152,0.05) 0%, transparent 100%); border-left: 3px solid var(--accent); border-radius: 0 12px 12px 0; padding: 12px 15px; display: flex; justify-content: space-between; align-items: center; margin-top: 5px; }
+        
+        .btn-atualizar-premium { border-radius: 12px; width: auto; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); cursor: pointer; font-size: 11px; font-weight: 800; padding: 10px 16px; }
+        .btn-blue { background: linear-gradient(135deg, rgba(59,130,246,0.2), rgba(30,58,138,0.4)); border: 1px solid rgba(59,130,246,0.4); color: var(--blue); }
+        .btn-crypto { background: linear-gradient(135deg, rgba(245,158,11,0.2), rgba(180,83,9,0.4)); border: 1px solid rgba(245,158,11,0.4); color: var(--crypto); }
+
+        .veiculo-card { background: rgba(255,255,255,0.03); border: 1px dashed rgba(255,255,255,0.15); border-radius: 16px; padding: 15px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        
+        /* PLACAS SIMÉTRICAS E ALINHADAS */
+        .placa-badge { 
+            background: #fff; color: #000; font-family: monospace; font-weight: 900; 
+            font-size: 14px; padding: 4px 0; border-radius: 6px; 
+            border-top: 12px solid #003399; position: relative; 
+            display: inline-block; width: 85px; text-align: center; letter-spacing: 1px;
+            box-sizing: border-box;
+        }
+        .placa-badge::before { 
+            content: 'BRASIL'; position: absolute; top: -10px; left: 0; 
+            width: 100%; text-align: center; font-size: 6px; color: white; 
+            font-family: sans-serif; letter-spacing: 0;
+        }
+
+        /* ALERTA DE ÓLEO/REVISÃO */
+        .alerta-manutencao {
+            border: 1px dashed transparent;
+            padding: 12px; border-radius: 12px; font-size: 12px;
+            font-weight: 800; margin-top: 20px; text-align: center;
+            transition: 0.3s;
+        }
+    </style>
+</head>
+<body>
+
+<div id="loginScreen">
+    <div class="login-box">
+        <h1 style="color: var(--blue); font-size: 26px; margin-bottom: 5px;">Junks Finanças</h1> 
+        <p style="color: var(--sub); font-size: 12px; margin-bottom: 25px;">Sincronização em Nuvem Ativada</p>
+        <input type="email" id="email" placeholder="E-mail">
+        <input type="password" id="password" placeholder="Senha">
+        <button onclick="autenticar()">Entrar / Registrar</button>
+        <p id="errorMsg" style="color: var(--danger); font-size: 12px; margin-top: 15px;"></p>
+    </div>
+</div>
+
+<div class="menu-overlay" id="menuOverlay" onclick="toggleMenu()"></div>
+<div id="sideMenu">
+    <h2 style="color: var(--text); margin: 0 0 5px 0; font-size:20px;">Menu</h2>
+    
+    <div class="menu-item active" id="menuBtnFinancas" onclick="alternarAba('financas')">🏠 Finanças</div>
+    <div class="menu-item" id="menuBtnFiis" onclick="alternarAba('fiis')" style="border-color: var(--blue); color: var(--blue);">🏢 Fundos Imobiliários</div>
+    <div class="menu-item" id="menuBtnCripto" onclick="alternarAba('cripto')" style="border-color: var(--crypto); color: var(--crypto);">🪙 Criptomoedas</div>
+    <div class="menu-item" id="menuBtnVeloe" onclick="alternarAba('veloe')" style="border-color: var(--veloe); color: var(--veloe);">🏷️ Tags & Pedágios</div>
+    <div class="menu-item" id="menuBtnVeiculos" onclick="alternarAba('veiculos')" style="border-color: var(--car); color: var(--car);">🚘 Veículos & Garagem</div>
+
+    <div style="flex:1;"></div>
+    <div style="border-top: 1px solid var(--border); padding-top: 20px;">
+        <button onclick="auth.signOut()" style="background:rgba(255,82,82,0.1); color:var(--danger); border:1px solid var(--danger);">Sair da Conta</button>
+    </div>
+</div>
+
+<div id="modalInv" class="modal"><div class="modal-content"><h3>Novo Investimento</h3><input type="text" id="invNome" placeholder="Nome (ex: Tesouro, Ações)"><input type="number" id="invSaldo" placeholder="Saldo Inicial"><select id="invMoeda"><option value="BRL">Real (R$)</option><option value="EUR">Euro (€)</option><option value="USD">Dólar ($)</option></select><button onclick="salvarModalInv()">Salvar</button><button onclick="fecharModalInv()" style="background:none; color:var(--sub); margin-top:10px;">Fechar</button></div></div>
+<div id="modalConta" class="modal"><div class="modal-content"><h3>Nova Conta Corrente</h3><select id="ccIcon"><option value="nubank">Nubank</option><option value="itau">Itaú</option><option value="bb">Banco do Brasil</option><option value="bradesco">Bradesco</option><option value="santander">Santander</option><option value="inter">Banco Inter</option><option value="c6">C6 Bank</option><option value="caixa">Caixa Econômica</option><option value="sicredi">Sicredi</option><option value="outro">Outro Banco</option></select><input type="text" id="ccNome" placeholder="Apelido da Conta"><input type="number" id="ccSaldo" placeholder="Saldo Atual"><button onclick="salvarModalConta()">Salvar</button><button onclick="fecharModalConta()" style="background:none; color:var(--sub); margin-top:10px;">Fechar</button></div></div>
+<div id="modalTransferencia" class="modal"><div class="modal-content"><h3>🔄 Transferência</h3><select id="transfOrigem"></select><select id="transfDestino"></select><input type="number" id="transfValor" placeholder="Valor a debitar"><input type="number" id="transfValorConvertido" placeholder="Valor creditado no destino" style="display:none; background:rgba(59, 130, 246, 0.1); border-color:var(--blue);"><button onclick="salvarTransferencia()">Transferir</button><button onclick="fecharModalTransferencia()" style="background:none; color:var(--sub); margin-top:10px;">Cancelar</button></div></div>
+<div id="modalPagarAvulso" class="modal"><div class="modal-content"><h3 style="margin-bottom: 8px;">Pagar Lançamento</h3><p id="textoPagamentoAvulso" style="font-size: 14px; color: var(--sub); margin-bottom: 18px; margin-top: 0;"></p><select id="selectContaPagamentoAvulso"><option value="">Apenas marcar como pago (sem debitar)</option></select><button onclick="confirmarPagamentoAvulso()" style="background: var(--blue); color: white;">Confirmar Pagamento</button><button onclick="fecharModalPagarAvulso()" style="background:none; color:var(--sub); margin-top:10px;">Cancelar</button></div></div>
+<div id="modalPagarFatura" class="modal"><div class="modal-content"><h3 style="margin-bottom: 8px;">Pagar Fatura</h3><p id="textoPagamentoFatura" style="font-size: 14px; color: var(--sub); margin-bottom: 18px; margin-top: 0;"></p><select id="selectContaPagamentoFatura"><option value="">Apenas marcar como paga (sem debitar)</option></select><button onclick="confirmarPagamentoFatura()" style="background: var(--blue); color: white;">Confirmar Pagamento</button><button onclick="fecharModalPagarFatura()" style="background:none; color:var(--sub); margin-top:10px;">Cancelar</button></div></div>
+
+<div id="modalCartao" class="modal">
+    <div class="modal-content">
+        <h3 id="modalCartaoTitulo">Configurar Cartão</h3>
+        <input type="hidden" id="editCartaoIdx">
+        <div class="color-selector" id="cartaoColorSelector"></div>
+        <input type="text" id="cfgCartaoNome" placeholder="Nome do Cartão">
+        
+        <label style="font-size:12px; color:var(--accent); display:flex; align-items:center; gap:8px; margin-bottom:12px; border: 1px dashed rgba(255,255,255,0.2); padding: 10px; border-radius: 12px; background: rgba(0,0,0,0.2);">
+            <input type="checkbox" id="cfgCartaoPrepago" style="width:20px; height:20px;"> 
+            <span>Cartão Pré-Pago / Empresa (DÉBITO) <br><small style="color:var(--sub); font-size:9px;">Atua como conta saldo. Gastos são descontados na hora.</small></span>
+        </label>
+
+        <select id="cfgCartaoBandeira">
+            <option value="mastercard">Mastercard</option>
+            <option value="visa">Visa</option>
+            <option value="amex">American Express</option>
+            <option value="elo">Elo</option>
+            <option value="outra">Outra / Sem logo</option>
+        </select>
+        
+        <input type="number" id="cfgCartaoLimite" placeholder="Limite Total (R$)">
+        
+        <div id="boxDatasCartao" style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+            <input type="number" id="cfgCartaoFech" placeholder="Dia Fechamento">
+            <input type="number" id="cfgCartaoVenc" placeholder="Dia Vencimento">
+        </div>
+        
+        <button onclick="salvarConfigCartao()">Salvar</button>
+        <button onclick="fecharModalCartao()" style="background:none; color:var(--sub); margin-top:10px;">Cancelar</button>
+        <button id="btnExcluirCartao" onclick="excluirCartao()" style="background:none; color:var(--danger); margin-top:10px; font-size:11px; display:none;">Excluir</button>
+    </div>
+</div>
+
+<div id="modalFii" class="modal"><div class="modal-content"><h3 style="margin-bottom: 15px; color: var(--blue);">Adicionar Novo FII</h3><input type="text" id="novoFiiTicker" placeholder="Ticker (Ex: MXRF11)" style="text-transform: uppercase;"><div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;"><input type="number" id="novoFiiQtd" placeholder="Quantidade"><input type="number" id="novoFiiPM" placeholder="Preço Pago (R$)"></div><button id="btnSalvarFii" onclick="salvarFii()" style="background: var(--blue); color: white; margin-top: 10px;">Adicionar</button><button onclick="fecharModalFii()" style="background:none; color:var(--sub); margin-top:10px;">Cancelar</button></div></div>
+<div id="modalEditFii" class="modal"><div class="modal-content"><h3 style="margin-bottom: 15px; color: var(--euro);">Editar Ativo</h3><input type="hidden" id="editFiiId"><input type="text" id="editFiiTicker" placeholder="Ticker (Ex: MXRF11)" style="text-transform: uppercase;"><div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;"><input type="number" id="editFiiQtd" placeholder="Quantidade Total"><input type="number" id="editFiiPM" placeholder="Preço Médio (R$)"></div><button id="btnSalvarEditFii" onclick="salvarEdicaoFii()" style="background: var(--euro); color: black; margin-top: 10px;">Salvar Alterações</button><button onclick="fecharModalEditFii()" style="background:none; color:var(--sub); margin-top:10px;">Cancelar</button></div></div>
+
+<div id="modalRecargaVeloe" class="modal"><div class="modal-content"><h3 style="margin-bottom: 15px; color: var(--veloe);">Recarregar Tag</h3><select id="veloeContaOrigem"><option value="" disabled selected>De onde saiu o dinheiro?</option></select><input type="number" id="veloeValorRecarga" placeholder="Valor da Recarga (R$)"><button onclick="salvarRecargaVeloe()" style="background: var(--veloe); color: black; margin-top: 10px;">Confirmar Recarga</button><button onclick="fecharModalRecargaVeloe()" style="background:none; color:var(--sub); margin-top:10px;">Cancelar</button></div></div>
+
+<div id="modalEditVeiculo" class="modal">
+    <div class="modal-content">
+        <h3 style="margin-bottom: 15px; color: var(--blue);">Editar Veículo da Tag</h3>
+        <input type="hidden" id="editVeiculoId">
+        <input type="text" id="editVeiculoNome" placeholder="Nome (Ex: Polo Sedan)">
+        <input type="text" id="editVeiculoPlaca" placeholder="Placa (Ex: ABC1D23)" style="text-transform: uppercase;" maxlength="7">
+        <button onclick="salvarEdicaoVeiculo()" style="background: var(--blue); color: white; margin-top: 10px;">Salvar</button>
+        <button onclick="fecharModalEditVeiculo()" style="background:none; color:var(--sub); margin-top:10px;">Cancelar</button>
+    </div>
+</div>
+
+<div id="modalCripto" class="modal"><div class="modal-content"><h3 style="margin-bottom: 15px; color: var(--crypto);">Novo Criptoativo</h3><input type="text" id="novoCriptoTicker" placeholder="Ticker (Ex: BTC, ZIL, LUNC)" style="text-transform: uppercase;"><div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;"><input type="number" id="novoCriptoQtd" placeholder="Quantidade"><input type="number" id="novoCriptoPM" placeholder="Preço Médio Pago ($ ou R$)"></div><select id="novoCriptoMoedaPM"><option value="BRL">Preço médio inserido em Reais (R$)</option><option value="USD">Preço médio inserido em Dólar (US$)</option></select><button id="btnSalvarCripto" onclick="salvarCripto()" style="background: var(--crypto); color: black; margin-top: 10px;">Adicionar Ativo</button><button onclick="fecharModalCripto()" style="background:none; color:var(--sub); margin-top:10px;">Cancelar</button></div></div>
+<div id="modalEditCripto" class="modal"><div class="modal-content"><h3 style="margin-bottom: 15px; color: var(--crypto);">Editar Criptoativo</h3><input type="hidden" id="editCriptoId"><input type="text" id="editCriptoTicker" placeholder="Ticker (Ex: BTC)" style="text-transform: uppercase;" disabled style="opacity:0.5;"><div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;"><input type="number" id="editCriptoQtd" placeholder="Quantidade Total"><input type="number" id="editCriptoPM" placeholder="Preço Médio em R$"></div><button onclick="salvarEdicaoCripto()" style="background: var(--crypto); color: black; margin-top: 10px;">Salvar Alterações</button><button onclick="fecharModalEditCripto()" style="background:none; color:var(--sub); margin-top:10px;">Cancelar</button></div></div>
+
+<div id="modalEditCarro" class="modal">
+    <div class="modal-content">
+        <h3 style="margin-bottom: 15px; color: var(--car);">Perfil do Veículo (Garagem)</h3>
+        <input type="hidden" id="editCarroId">
+        <input type="text" id="editCarroNome" placeholder="Nome (Ex: Polo Sedan 1.6)">
+        <input type="text" id="editCarroAno" placeholder="Ano (Ex: 2009/2010)">
+        <input type="number" id="editCarroKm" placeholder="Quilometragem Atual">
+        
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top: 12px; margin-bottom: 12px;">
+            <input type="text" id="editCarroCodigoFipe" placeholder="Cód FIPE (Ex: 005275-2)">
+            <input type="number" id="editCarroAnoFipe" placeholder="Ano FIPE (Ex: 2010)">
+        </div>
+
+        <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 12px; margin-bottom: 12px; border: 1px dashed rgba(255,255,255,0.1);">
+            <label style="font-size: 11px; color: var(--sub); font-weight: 700; margin-bottom: 6px; display: block; text-transform: uppercase;">Próxima Troca de Óleo</label>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <div>
+                    <small style="color:var(--sub); font-size:9px;">Por KM (Alvo)</small>
+                    <input type="number" id="editCarroKmRevisao" placeholder="Ex: 110000" style="margin-bottom: 0;">
+                </div>
+                <div>
+                    <small style="color:var(--sub); font-size:9px;">Por Tempo (Data Alvo)</small>
+                    <input type="date" id="editCarroDataRevisao" style="margin-bottom: 0;">
+                    <button onclick="setSeisMeses()" style="background:rgba(249,115,22,0.15); color:var(--car); padding:4px; font-size:9px; margin-top:4px; width:100%; border: 1px dashed var(--car);">+ 6 MESES</button>
+                </div>
+            </div>
+            <small style="color: var(--sub); font-size: 9px; margin-top: 8px; display: block;">*Para o motor EA111, a troca deve ocorrer em 10.000 km ou 6 meses, o que ocorrer primeiro.</small>
+        </div>
+
+        <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 12px; margin-bottom: 12px; border: 1px dashed rgba(255,255,255,0.1);">
+            <label style="font-size: 11px; color: var(--sub); font-weight: 700; margin-bottom: 6px; display: block; text-transform: uppercase;">Pneus & Documentação</label>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <div>
+                    <small style="color:var(--sub); font-size:9px;">KM Último Rodízio</small>
+                    <input type="number" id="editCarroKmPneu" placeholder="Ex: 95000" style="margin-bottom: 6px;">
+                </div>
+                <div>
+                    <small style="color:var(--sub); font-size:9px;">Mês Licenciamento</small>
+                    <select id="editCarroMesLicenciamento" style="margin-bottom: 6px; padding: 12px;">
+                        <option value="">Selecione o Mês</option>
+                        <option value="01">Janeiro</option>
+                        <option value="02">Fevereiro</option>
+                        <option value="03">Março</option>
+                        <option value="04">Abril</option>
+                        <option value="05">Maio</option>
+                        <option value="06">Junho</option>
+                        <option value="07">Julho</option>
+                        <option value="08">Agosto</option>
+                        <option value="09">Setembro</option>
+                        <option value="10">Outubro</option>
+                        <option value="11">Novembro</option>
+                        <option value="12">Dezembro</option>
+                    </select>
+                </div>
+                <div style="grid-column: span 2;">
+                    <small style="color:var(--sub); font-size:9px;">Vencimento Seguro Auto</small>
+                    <input type="date" id="editCarroVencSeguro" style="margin-bottom: 0;">
+                </div>
+            </div>
+        </div>
+
+        <button onclick="salvarEdicaoCarro()" style="background: var(--car); color: white; margin-top: 10px;">Atualizar Perfil</button>
+        <button onclick="fecharModalEditCarro()" style="background:none; color:var(--sub); margin-top:10px;">Cancelar</button>
+    </div>
+</div>
+
+<div id="modalLogCarro" class="modal">
+    <div class="modal-content">
+        <h3 id="tituloLogCarro" style="margin-bottom: 15px; color: var(--car);">Novo Lançamento</h3>
+        <input type="hidden" id="tipoLogCarro">
+        
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:12px;">
+            <input type="date" id="logCarroData" style="margin-bottom:0;">
+            <input type="time" id="logCarroHora" style="margin-bottom:0;">
+        </div>
+
+        <input type="number" id="logCarroKm" placeholder="Km no painel">
+        
+        <div id="boxAbastecimento" style="display:none; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:12px;">
+            <input type="number" id="logCarroLitros" placeholder="Litros (L)" style="margin-bottom:0;">
+            <input type="number" id="logCarroPrecoLitro" placeholder="Preço/Litro (R$)" style="margin-bottom:0;">
+        </div>
+        
+        <input type="number" id="logCarroValor" placeholder="Valor Total (R$)">
+        <input type="text" id="logCarroDesc" placeholder="Descrição / Posto / Oficina">
+        
+        <select id="logCarroContaOrigem">
+            <option value="" disabled selected>De onde saiu o dinheiro?</option>
+        </select>
+
+        <button onclick="salvarLogCarro()" style="background: var(--car); color: white; margin-top: 10px;">Registrar e Debitar</button>
+        <button onclick="fecharModalLogCarro()" style="background:none; color:var(--sub); margin-top:10px;">Cancelar</button>
+    </div>
+</div>
+
+<div class="container" id="app">
+    
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; gap:12px;">
+        <button onclick="toggleMenu()" style="width: 45px; height: 45px; padding: 0; background: rgba(255,255,255,0.05); color: white; border-radius: 12px; border: 1px solid var(--border); font-size: 22px; display: flex; align-items: center; justify-content: center;">☰</button>
+        <div style="display:flex; flex-direction:column; gap:4px; font-size:10px; font-weight:800; background: rgba(255, 255, 255, 0.05); padding: 8px 12px; border-radius: 12px; flex:1;">
+            <div>🇪🇺 <span style="color:var(--euro);">1 EUR = </span><span id="euroTaxa" style="color:#fff;">...</span><span id="euroVar" style="margin-left:4px; font-size:9px;"></span></div>
+            <div>🇺🇸 <span style="color:var(--blue);">1 USD = </span><span id="usdTaxa" style="color:#fff;">...</span><span id="usdVar" style="margin-left:4px; font-size:9px;"></span></div>
+        </div>
+    </div>
+
+    <div id="abaFinancas">
+        <div class="main-balance"><small style="font-weight:700; color: var(--sub);">SALDO DISPONÍVEL</small><h1 id="sobraDisplay">R$ 0,00</h1></div>
+        
+        <div class="desktop-grid">
+            <div>
+                <div class="month-nav"><button onclick="mudarMes(-1)">❮</button><input type="month" id="mesSelecao" onchange="carregarTudo()"><button onclick="mudarMes(1)">❯</button></div>
+
+                <div class="card">
+                    <h3>📈 Patrimônio Global (Investimento)</h3>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; margin-bottom: 18px; text-align: center;">
+                        <div><small>TOTAL BRL</small><br><span id="patBRL" style="color:var(--accent); font-weight:800; font-size: 16px;">R$ 0,00</span></div>
+                        <div style="border-left: 1px solid var(--border);"><small>TOTAL USD</small><br><span id="patUSD" style="color:var(--blue); font-weight:800; font-size: 16px;">$ 0.00</span><br><small id="patUSD_Convertido" style="font-size: 9px; color: var(--sub); opacity: 0.8;"></small></div>
+                        <div style="border-left: 1px solid var(--border);"><small>TOTAL EUR</small><br><span id="patEUR" style="color:var(--euro); font-weight:800; font-size: 16px;">€ 0,00</span><br><small id="patEUR_Convertido" style="font-size: 9px; color: var(--sub); opacity: 0.8;"></small></div>
+                    </div>
+                    <div id="investList"></div>
+                    <button onclick="abrirModalInv()" style="background:rgba(59, 130, 246, 0.1); color:var(--blue); padding:12px; font-size:11px; margin-top:10px; width:auto;">+ Novo Investimento</button>
+                </div>
+
+                <div class="card">
+                    <h3>💳 Contas Correntes (Pagamentos)</h3>
+                    <div id="contasList"></div>
+                    <div style="display: flex; gap: 8px;">
+                        <button onclick="abrirModalConta()" style="background:rgba(0, 242, 152, 0.1); color:var(--accent); padding:12px; font-size:11px; margin-top:10px; flex: 1;">+ Nova Conta</button>
+                        <button onclick="abrirModalTransferencia()" style="background:rgba(59, 130, 246, 0.1); color:var(--blue); padding:12px; font-size:11px; margin-top:10px; flex: 1;">🔄 Transferir</button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>📊 Ajuste de Teto</h3>
+                    <div style="display:flex; align-items:center; gap:8px;"><button onclick="ajustarTetoOp('sub')" style="width:45px; padding:10px; font-size:18px; background:rgba(255,82,82,0.2); color:var(--danger); margin:0; border-radius:12px;">-</button><input type="number" id="limiteInput" placeholder="Valor Principal" oninput="salvarAjustes()" style="margin:0; flex:1; text-align:center; font-weight:bold; font-size:18px;"><button onclick="ajustarTetoOp('add')" style="width:45px; padding:10px; font-size:18px; background:rgba(0,242,152,0.2); color:var(--accent); margin:0; border-radius:12px;">+</button></div>
+                </div>
+            </div>
+
+            <div>
+                <div id="containerCartoes"></div>
+                <div style="text-align: center; margin-bottom: 25px;"><button onclick="abrirModalCartao()" style="background:none; color:var(--blue); border:1px dashed var(--blue); padding:10px 20px; width:auto; font-size:12px;">+ Novo Cartão</button></div>
+
+                <div class="card" id="areaNovoLancamento">
+                    <h3>💸 Novo Lançamento</h3><select id="metodoPag"></select><input type="text" id="desc" placeholder="Descrição"><div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;"><input type="number" id="val" placeholder="Valor"><select id="parcelas"><option value="1">À vista</option></select></div><div style="display:flex; justify-content:space-between; align-items:center;"><label style="font-size:12px; color:var(--accent); display:flex; align-items:center; gap:8px;"><input type="checkbox" id="isFixo" style="width:18px; height:18px;"> fixo mensal</label><button onclick="addGasto()" class="btn-lancar">Lançar</button></div>
+                </div>
+
+                <div id="containerGastos"></div>
+                <div id="resumoTotais" class="resumo-final"></div>
+                
+                <div class="card" style="margin-top: 35px; background: rgba(0,0,0,0.15);">
+                    <h3>💾 Segurança e Relatórios</h3>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+                        <button class="btn-backup" onclick="exportarCSV()" style="background: rgba(255,204,0,0.1); color: var(--euro); grid-column: span 2;">📥 Baixar Extrato Mês</button>
+                        <button class="btn-backup" onclick="exportarDadosSafe()" style="background: rgba(0,242,152,0.1); color: var(--accent);">📤 Backup JSON</button>
+                        <button class="btn-backup" onclick="document.getElementById('fileInput').click()" style="background: rgba(59,130,246,0.1); color: var(--blue);">📥 Importar JSON</button>
+                    </div><input type="file" id="fileInput" style="display:none" onchange="importarDados(this)" accept=".json">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="abaFiis" style="display: none;">
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom: 20px;"><button onclick="alternarAba('financas')" style="width:auto; padding:8px 12px; font-size:12px; background:rgba(255,255,255,0.05); color:white; border-radius:10px; border: 1px solid rgba(255,255,255,0.1);">❮ Voltar</button><h2 style="margin:0; font-size:18px; color:white; font-weight:900; letter-spacing: -0.5px;">Fundos Imobiliários</h2></div>
+
+        <div class="premium-dash-card fii-dashboard-card">
+            <div class="dash-row"><div><span class="dash-label" style="color: rgba(255,255,255,0.7);">Patrimônio Investido</span><span class="dash-val-big" id="fiiResumoTotal">R$ 0,00</span><span id="fiiResumoVarBadge" class="dash-badge badge-green" style="vertical-align: super;">0,00%</span></div></div>
+            <div class="dash-row" style="margin-bottom: 0; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 18px;">
+                <div style="text-align: left;"><span class="dash-label">Custo Total</span><span class="dash-val" style="font-size: 15px;" id="fiiResumoAplicado">R$ 0,00</span></div>
+                <div style="text-align: center;"><span class="dash-label">Lucro / Perda</span><span class="dash-val" style="font-size: 15px;" id="fiiResumoVarRS">R$ 0,00</span></div>
+                <div style="text-align: right;"><span class="dash-label" style="color: var(--accent);">Proventos Mês</span><span class="dash-val" style="font-size: 15px; color: var(--accent);" id="fiiResumoProventos">R$ 0,00</span></div>
+            </div>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-top: 25px; margin-bottom: 15px; padding: 0 5px;">
+            <span style="color:var(--sub); font-size:12px; font-weight:800; text-transform: uppercase;" id="fiiContadorLabel">0 Ativos</span>
+            <div style="display:flex; gap: 8px;">
+                <button onclick="abrirModalFii()" style="background:rgba(0, 242, 152, 0.1); color:var(--accent); width:auto; padding:8px 12px; border-radius:10px; font-size:11px; font-weight:800; border:1px solid rgba(0, 242, 152, 0.3);">+ Novo Ativo</button>
+                <button onclick="atualizarCotacoesFIIs(true)" id="btnAtualizarCotacoes" class="btn-atualizar-premium btn-blue">🔄 Sincronizar B3</button>
+            </div>
+        </div>
+        <div id="fiiListContainer" class="fii-cripto-grid"></div>
+    </div>
+
+    <div id="abaCripto" style="display: none;">
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom: 20px;"><button onclick="alternarAba('financas')" style="width:auto; padding:8px 12px; font-size:12px; background:rgba(255,255,255,0.05); color:white; border-radius:10px; border: 1px solid rgba(255,255,255,0.1);">❮ Voltar</button><h2 style="margin:0; font-size:18px; color:white; font-weight:900; letter-spacing: -0.5px;">Criptomoedas</h2></div>
+
+        <div class="premium-dash-card cripto-dashboard-card">
+            <div class="dash-row"><div><span class="dash-label" style="color: rgba(255,255,255,0.7);">Saldo Cripto (BRL)</span><span class="dash-val-big" id="criptoResumoTotal">R$ 0,00</span><span id="criptoResumoVarBadge" class="dash-badge badge-green" style="vertical-align: super;">0,00%</span></div></div>
+            <div class="dash-row" style="margin-bottom: 0; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 18px;">
+                <div style="text-align: left;"><span class="dash-label">Custo Total BRL</span><span class="dash-val" style="font-size: 15px;" id="criptoResumoAplicado">R$ 0,00</span></div>
+                <div style="text-align: right;"><span class="dash-label">Lucro / Perda BRL</span><span class="dash-val" style="font-size: 15px;" id="criptoResumoVarRS">R$ 0,00</span></div>
+            </div>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-top: 25px; margin-bottom: 15px; padding: 0 5px;">
+            <span style="color:var(--sub); font-size:12px; font-weight:800; text-transform: uppercase;" id="criptoContadorLabel">0 Ativos</span>
+            <div style="display:flex; gap: 8px;">
+                <button onclick="abrirModalCripto()" style="background:rgba(245, 158, 11, 0.1); color:var(--crypto); width:auto; padding:8px 12px; border-radius:10px; font-size:11px; font-weight:800; border:1px solid rgba(245, 158, 11, 0.3);">+ Novo Ativo</button>
+                <button onclick="atualizarCotacoesCripto(true)" id="btnAtualizarCripto" class="btn-atualizar-premium btn-crypto">🔄 API Binance</button>
+            </div>
+        </div>
+        <div id="criptoListContainer" class="fii-cripto-grid"></div>
+    </div>
+
+    <div id="abaVeiculos" style="display: none;">
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom: 20px;"><button onclick="alternarAba('financas')" style="width:auto; padding:8px 12px; font-size:12px; background:rgba(255,255,255,0.05); color:white; border-radius:10px; border: 1px solid rgba(255,255,255,0.1);">❮ Voltar</button><h2 style="margin:0; font-size:18px; color:white; font-weight:900; letter-spacing: -0.5px;">Gestão do Veículo</h2></div>
+
+        <div class="premium-dash-card car-dashboard-card" style="text-align: center; position: relative;">
+            <button onclick="abrirModalEditCarro()" style="position:absolute; top:15px; right:15px; background:rgba(255,255,255,0.1); color:white; width:36px; height:36px; border-radius:10px; padding:0; border:none;">⚙️</button>
+            <div style="font-size:30px; margin-bottom:5px;">🚘</div>
+            <h3 id="veiculoNomeLabel" style="color:white; font-size:18px; margin:0; text-transform:none;">Veículo</h3>
+            <span id="veiculoAnoLabel" style="color:var(--sub); font-size:12px;">Ano</span>
+            <span id="veiculoFipeLabel" style="color:var(--accent); font-size:12px; font-weight:800; display:block; margin-top:5px; background: rgba(0,242,152,0.1); width: fit-content; margin-left: auto; margin-right: auto; padding: 4px 8px; border-radius: 8px;">FIPE: Não Configurado</span>
+            
+            <div style="display:flex; justify-content:space-around; margin-top:20px; padding-top:20px; border-top:1px dashed rgba(255,255,255,0.2);">
+                <div><span class="dash-label">KM Atual</span><span class="dash-val" id="veiculoKmAtual" style="color:white;">0</span></div>
+                <div><span class="dash-label">Média Mês</span><span class="dash-val" id="veiculoMediaKm" style="color:var(--car);">0.0 km/l</span></div>
+                <div><span class="dash-label">Custo/KM Mês</span><span class="dash-val" id="veiculoCustoKm" style="color:var(--danger);">R$ 0,00</span></div>
+            </div>
+            
+            <div id="veiculoAlertaManutencao"></div>
+        </div>
+
+        <div class="desktop-grid">
+            <div>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom: 25px;">
+                    <button onclick="abrirModalLogCarro('Abastecimento')" style="background:rgba(249, 115, 22, 0.15); color:var(--car); border:1px solid rgba(249, 115, 22, 0.4); padding:15px;">⛽ Lançar Combustível</button>
+                    <button onclick="abrirModalLogCarro('Manutencao')" style="background:rgba(255, 255, 255, 0.05); color:white; border:1px solid rgba(255, 255, 255, 0.1); padding:15px;">🔧 Lançar Manutenção</button>
+                </div>
+            </div>
+            <div>
+                <h3 style="color: white; margin-bottom: 12px; padding-left: 5px;">Histórico do Mês</h3>
+                <div id="veiculoLogsList"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="abaVeloe" style="display: none;">
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom: 20px;"><button onclick="alternarAba('financas')" style="width:auto; padding:8px 12px; font-size:12px; background:rgba(255,255,255,0.05); color:white; border-radius:10px; border: 1px solid rgba(255,255,255,0.1);">❮ Voltar</button><h2 style="margin:0; font-size:18px; color:white; font-weight:900; letter-spacing: -0.5px;">Controle Veloe</h2></div>
+
+        <div class="premium-dash-card veloe-dashboard-card">
+            <span class="dash-label" style="color: rgba(255,255,255,0.7);">Saldo Atual da Tag</span>
+            <div class="dash-val-big" id="veloeSaldoAtual" style="color: var(--veloe); font-size:36px;">R$ 0,00</div>
+            <button onclick="abrirModalRecargaVeloe()" style="background:rgba(195,214,0,0.15); color:var(--veloe); border:1px dashed var(--veloe); padding:10px 20px; width:auto; font-size:12px; margin-top:10px; border-radius:12px;">+ Fazer Recarga</button>
+        </div>
+
+        <div class="desktop-grid">
+            <div>
+                <div class="card" style="background: transparent; border: none; padding: 0; box-shadow: none;">
+                    <h3 style="color: white; margin-bottom: 12px; padding-left: 5px;">Veículos da Tag</h3>
+                    <div id="veloeVeiculosList"></div>
+                </div>
+
+                <div class="card" style="background: transparent; border: none; padding: 0; box-shadow: none; border-color: rgba(195,214,0,0.3); margin-top: 25px;">
+                    <h3 style="color: var(--veloe); margin-bottom: 15px;">Nova Passagem (Descontar)</h3>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom: 12px;">
+                        <select id="veloeVeiculoSel"></select>
+                        <select id="veloeTipoSel"><option value="Pedágio">🛣️ Pedágio</option><option value="Estacionamento">🅿️ Estacionamento</option><option value="Mensalidade">📅 Mensalidade</option></select>
+                    </div>
+                    <input type="text" id="veloeLocal" placeholder="Local / Praça (Opcional)">
+                    <div style="display:flex; gap:12px; align-items:center;">
+                        <input type="number" id="veloeValor" placeholder="Valor (R$)" style="margin:0;">
+                        <button onclick="addPassagemVeloe()" style="background: var(--veloe); color: black; width: 120px;">Lançar</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div>
+                <h3 style="color: white; margin-bottom: 12px; padding-left: 5px; margin-top: 25px;">Histórico de Passagens</h3>
+                <div id="veloePassagensList"></div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    "use strict";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyAUA30227CxibvN8bpZigFYJ845PVIWG_E",
+        authDomain: "junks-financas.firebaseapp.com",
+        databaseURL: "https://junks-financas-default-rtdb.firebaseio.com",
+        projectId: "junks-financas",
+        storageBucket: "junks-financas.firebasestorage.app",
+        messagingSenderId: "566948589515",
+        appId: "1:566948589515:web:8b2fbfbef22ad95e4a104e"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const firebaseDb = firebase.database();
+    
+    let userUid = null;
+    let db = { 
+        meses: {}, fixosMestre: [], inv: [], fiis: [], contas: [], 
+        cartoes: [{ id: 1, nome: "Master", limite: 2000, fech: 1, venc: 10, cor: "linear-gradient(135deg, #1e3a8a, #0f172a)", bandeira: "mastercard", prepago: false }] 
+    };
+    let cotaEuro = 0, cotaUsd = 0;
+    
+    let faturasVisiveis = {};
+    let selectedColor = "linear-gradient(135deg, #1e3a8a, #0f172a)";
+    let cartaoFaturaSelecionado = null; let valorFaturaSelecionada = 0; let itemPagarAvulsoId = null;
+    let ultimaAtualizacaoB3 = 0; let ultimaAtualizacaoCripto = 0;
+
+    // CÁLCULO TRIDIRECIONAL DE COMBUSTÍVEL
+    const inLitros = document.getElementById("logCarroLitros");
+    const inPreco = document.getElementById("logCarroPrecoLitro");
+    const inTotal = document.getElementById("logCarroValor");
+
+    function calcularCombustivel(origem) {
+        let l = parseFloat(inLitros.value);
+        let p = parseFloat(inPreco.value);
+        let t = parseFloat(inTotal.value);
+
+        if (origem === 'litros') {
+            if (!isNaN(l) && !isNaN(p)) inTotal.value = (l * p).toFixed(2);
+            else if (!isNaN(l) && !isNaN(t) && l > 0) inPreco.value = (t / l).toFixed(2);
+        } else if (origem === 'preco') {
+            if (!isNaN(l) && !isNaN(p)) inTotal.value = (l * p).toFixed(2);
+            else if (!isNaN(p) && !isNaN(t) && p > 0) inLitros.value = (t / p).toFixed(2);
+        } else if (origem === 'total') {
+            if (!isNaN(t) && !isNaN(p) && p > 0) inLitros.value = (t / p).toFixed(2);
+            else if (!isNaN(t) && !isNaN(l) && l > 0) inPreco.value = (t / l).toFixed(2);
+        }
+    }
+
+    inLitros.addEventListener("input", () => calcularCombustivel('litros'));
+    inPreco.addEventListener("input", () => calcularCombustivel('preco'));
+    inTotal.addEventListener("input", () => calcularCombustivel('total'));
+
+    document.getElementById("cfgCartaoPrepago").addEventListener("change", function() {
+        if(this.checked) {
+            document.getElementById("cfgCartaoLimite").placeholder = "Saldo Atual (R$)";
+            document.getElementById("boxDatasCartao").style.display = "none";
+        } else {
+            document.getElementById("cfgCartaoLimite").placeholder = "Limite Total (R$)";
+            document.getElementById("boxDatasCartao").style.display = "grid";
+        }
+    });
+
+    function toggleMenu() {
+        const menu = document.getElementById('sideMenu');
+        const overlay = document.getElementById('menuOverlay');
+        if (menu.classList.contains('open')) { menu.classList.remove('open'); overlay.style.display = 'none'; } 
+        else { menu.classList.add('open'); overlay.style.display = 'block'; }
+    }
+
+    function alternarAba(aba) {
+        ['financas', 'fiis', 'cripto', 'veiculos', 'veloe'].forEach(id => {
+            document.getElementById('aba' + id.charAt(0).toUpperCase() + id.slice(1)).style.display = 'none';
+            let btn = document.getElementById('menuBtn' + id.charAt(0).toUpperCase() + id.slice(1));
+            if(btn) { btn.classList.remove('active'); btn.style.color = getComputedStyle(btn).borderColor; }
+        });
+
+        document.getElementById('aba' + aba.charAt(0).toUpperCase() + aba.slice(1)).style.display = 'block';
+        let btnAtivo = document.getElementById('menuBtn' + aba.charAt(0).toUpperCase() + aba.slice(1));
+        if(btnAtivo) btnAtivo.classList.add('active');
+
+        if(aba === 'fiis') atualizarCotacoesFIIs(false);
+        else if(aba === 'cripto') { renderCripto(); atualizarCotacoesCripto(false); }
+        else if(aba === 'veloe') renderVeloe();
+        else if(aba === 'veiculos') renderVeiculos();
+
+        toggleMenu(); 
+    }
+
+    function fM(valor, moeda = 'BRL', exato = false) { 
+        if (!valor || isNaN(valor)) valor = 0;
+        let config = { style: 'currency', currency: moeda };
+        if (exato) { config.minimumFractionDigits = 4; config.maximumFractionDigits = 4; }
+        if (moeda === 'EUR') return '€ ' + valor.toLocaleString('pt-BR', config).replace('€','').trim();
+        if (moeda === 'USD') return valor.toLocaleString('en-US', config);
+        return valor.toLocaleString('pt-BR', config); 
+    }
+
+    function checkExtraDBsInit() {
+        if(!db.veloe) { db.veloe = { saldo: 0, veiculos: [ { id: 1, nome: "VW Polo Sedan", placa: "---" } ], passagens: [] }; }
+        if(!db.cripto) db.cripto = []; 
+        if(!db.veiculosDB) db.veiculosDB = { carro: { id: 1, nome: "VW Polo Sedan 1.6", ano: "2009/2010", kmAtual: 100000, kmRevisao: 110000, dataRevisao: "" }, logs: [] };
+    }
+
+    // ==========================================
+    // CRIPTOMOEDAS (BINANCE API)
+    // ==========================================
+    async function buscarPrecoCriptoBinance(ticker) {
+        try {
+            const sym = ticker.toUpperCase().trim() + 'USDT';
+            const res = await fetch(`https://api.binance.com/api/v3/ticker/price?symbol=${sym}`);
+            if(res.ok) {
+                const data = await res.json();
+                if(data.price) return parseFloat(data.price) * cotaUsd; 
+            }
+        } catch(e) { console.error("Erro Binance:", e); }
+        return null; 
+    }
+
+    function abrirModalCripto() { document.getElementById('modalCripto').style.display = 'flex'; }
+    function fecharModalCripto() { document.getElementById('modalCripto').style.display = 'none'; }
+
+    async function salvarCripto() {
+        const ticker = document.getElementById("novoCriptoTicker").value.toUpperCase().trim();
+        const qtd = parseFloat(document.getElementById("novoCriptoQtd").value);
+        let pmInput = parseFloat(document.getElementById("novoCriptoPM").value);
+        const moedaPM = document.getElementById("novoCriptoMoedaPM").value;
+        
+        if(!ticker || isNaN(qtd) || isNaN(pmInput)) return alert("Preencha Ticker, Qtd e PM.");
+
+        if(moedaPM === 'USD') pmInput = pmInput * cotaUsd;
+
+        const btn = document.getElementById("btnSalvarCripto");
+        btn.innerText = "Buscando Binance..."; btn.disabled = true;
+
+        const precoAtualBRL = await buscarPrecoCriptoBinance(ticker) || pmInput; 
+
+        let c = db.cripto.find(x => x.ticker === ticker);
+        if (c) {
+            const custoAntigo = c.qtd * c.pm;
+            const custoNovo = qtd * pmInput;
+            c.qtd += qtd;
+            c.pm = (custoAntigo + custoNovo) / c.qtd;
+            c.atual = precoAtualBRL;
+        } else {
+            db.cripto.push({ id: Date.now(), ticker, qtd, pm: pmInput, atual: precoAtualBRL });
+        }
+
+        salvar();
+        document.getElementById("novoCriptoTicker").value = ""; document.getElementById("novoCriptoQtd").value = ""; document.getElementById("novoCriptoPM").value = "";
+        btn.innerText = "Adicionar Ativo"; btn.disabled = false;
+        fecharModalCripto();
+        renderCripto();
+    }
+
+    function abrirModalEditCripto(id) {
+        const c = db.cripto.find(x => x.id === id);
+        if(!c) return;
+        document.getElementById("editCriptoId").value = c.id;
+        document.getElementById("editCriptoTicker").value = c.ticker;
+        document.getElementById("editCriptoQtd").value = c.qtd;
+        document.getElementById("editCriptoPM").value = c.pm;
+        document.getElementById('modalEditCripto').style.display = 'flex';
+    }
+    function fecharModalEditCripto() { document.getElementById('modalEditCripto').style.display = 'none'; }
+    
+    function salvarEdicaoCripto() {
+        const id = parseInt(document.getElementById("editCriptoId").value);
+        const qtd = parseFloat(document.getElementById("editCriptoQtd").value);
+        const pm = parseFloat(document.getElementById("editCriptoPM").value);
+        if(isNaN(qtd) || isNaN(pm)) return;
+        
+        const c = db.cripto.find(x => x.id === id);
+        if(c) { c.qtd = qtd; c.pm = pm; salvar(); }
+        fecharModalEditCripto(); renderCripto();
+    }
+
+    function delCripto(id) { if(confirm("Excluir Cripto?")) { db.cripto = db.cripto.filter(x => x.id !== id); salvar(); renderCripto(); } }
+
+    async function atualizarCotacoesCripto(forcar = false) {
+        if(!db.cripto || db.cripto.length === 0) return;
+        const agora = Date.now();
+        if (!forcar && (agora - ultimaAtualizacaoCripto < 120000)) return; 
+
+        const btn = document.getElementById("btnAtualizarCripto");
+        btn.innerHTML = "⏳ Atualizando..."; btn.disabled = true;
+
+        let atualizou = false;
+        for (let i = 0; i < db.cripto.length; i++) {
+            let p = await buscarPrecoCriptoBinance(db.cripto[i].ticker);
+            if(p && p !== db.cripto[i].atual) { db.cripto[i].atual = p; atualizou = true; }
+        }
+
+        ultimaAtualizacaoCripto = Date.now();
+        if (atualizou) salvar();
+        renderCripto();
+        btn.innerHTML = '🔄 API Binance'; btn.disabled = false;
+    }
+
+    function renderCripto() {
+        if(!db.cripto) return;
+        const list = document.getElementById("criptoListContainer"); list.innerHTML = "";
+        let tPM = 0, tAtual = 0;
+
+        db.cripto.forEach(c => {
+            const valCusto = c.qtd * c.pm;
+            const valAtual = c.qtd * c.atual;
+            tPM += valCusto; tAtual += valAtual;
+            
+            const lucroEmReais = valAtual - valCusto;
+            const variacaoPerc = valCusto > 0 ? (lucroEmReais / valCusto) * 100 : 0;
+            const badgeClass = lucroEmReais >= 0 ? "badge-green" : "badge-red";
+            const sinal = lucroEmReais >= 0 ? "+" : "";
+
+            list.innerHTML += `
+            <div class="asset-card-item">
+                <div class="asset-card-header">
+                    <div style="display:flex; align-items:center;">
+                        <div class="cripto-icon-box">${c.ticker.slice(0,3)}</div>
+                        <div>
+                            <b style="font-size:17px; color:white; letter-spacing: 0.5px;">${c.ticker}</b><br>
+                            <span style="color:var(--sub); font-size:10px; font-weight:700; text-transform:uppercase;">Preço Atual: <b style="color:white;">${fM(c.atual, 'BRL', true)}</b></span>
+                        </div>
+                    </div>
+                    <div style="display:flex; gap: 8px;">
+                        <button onclick="abrirModalEditCripto(${c.id})" style="background:rgba(255,204,0,0.1); border:1px solid rgba(255,204,0,0.3); color:var(--euro); width:32px; height:32px; border-radius:10px; padding:0;">✏️</button>
+                        <button onclick="delCripto(${c.id})" style="background:rgba(255,82,82,0.1); border:1px solid rgba(255,82,82,0.3); color:var(--danger); width:32px; height:32px; border-radius:10px; padding:0;">🗑️</button>
+                    </div>
+                </div>
+                <div class="grid-3">
+                    <div><span class="dash-label">Saldo Cripto</span><b style="color:white; font-size:14px;">${c.qtd}</b></div>
+                    <div style="text-align:center;"><span class="dash-label">Preço Médio</span><b style="color:white; font-size:14px;">${fM(c.pm, 'BRL', true)}</b></div>
+                    <div style="text-align:right;"><span class="dash-label">Custo Total</span><b style="color:white; font-size:14px;">${fM(valCusto)}</b></div>
+                </div>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-top: 15px; padding-top: 15px; border-top: 1px dashed rgba(255,255,255,0.05);">
+                    <div style="display:flex; flex-direction:column;">
+                        <span class="dash-label" style="color:white;">Variação</span>
+                        <div style="display:flex; align-items:center; margin-top:2px;">
+                            <b style="font-size:14px; color: ${lucroEmReais>=0 ? 'var(--accent)' : 'var(--danger)'};">${sinal}${fM(lucroEmReais)}</b>
+                            <span class="dash-badge ${badgeClass}">${sinal}${variacaoPerc.toFixed(2)}%</span>
+                        </div>
+                    </div>
+                    <div style="text-align:right;"><span class="dash-label" style="color:white;">Valor Atual (BRL)</span><b style="font-size:18px; color:white;">${fM(valAtual)}</b></div>
+                </div>
+            </div>`;
+        });
+
+        const varRS = tAtual - tPM;
+        const varPerc = tPM > 0 ? (varRS / tPM) * 100 : 0;
+        
+        document.getElementById("criptoResumoTotal").innerText = fM(tAtual);
+        document.getElementById("criptoResumoAplicado").innerText = fM(tPM);
+        document.getElementById("criptoResumoVarBadge").innerText = `${varPerc >= 0 ? '+' : ''}${varPerc.toFixed(2)}%`;
+        document.getElementById("criptoResumoVarBadge").className = `dash-badge ${varPerc >= 0 ? 'badge-green' : 'badge-red'}`;
+        document.getElementById("criptoResumoVarRS").innerText = `${varRS >= 0 ? '+' : ''}${fM(varRS)}`;
+        document.getElementById("criptoResumoVarRS").style.color = varRS >= 0 ? 'var(--accent)' : 'var(--danger)';
+        document.getElementById("criptoContadorLabel").innerText = `${db.cripto.length} Ativos`;
+    }
+
+    // ==========================================
+    // VEÍCULOS & GARAGEM
+    // ==========================================
+    function setSeisMeses() {
+        let d = new Date();
+        d.setMonth(d.getMonth() + 6);
+        document.getElementById("editCarroDataRevisao").value = d.toISOString().split('T')[0];
+    }
+
+    function abrirModalEditCarro() {
+        const c = db.veiculosDB.carro;
+        document.getElementById("editCarroNome").value = c.nome || "";
+        document.getElementById("editCarroAno").value = c.ano || "";
+        document.getElementById("editCarroKm").value = c.kmAtual || "";
+        document.getElementById("editCarroKmRevisao").value = c.kmRevisao || "";
+        document.getElementById("editCarroDataRevisao").value = c.dataRevisao || "";
+        
+        document.getElementById("editCarroCodigoFipe").value = c.codigoFipe || "";
+        document.getElementById("editCarroAnoFipe").value = c.anoFipe || "";
+        document.getElementById("editCarroKmPneu").value = c.kmPneu || "";
+        document.getElementById("editCarroMesLicenciamento").value = c.mesLicenciamento || "";
+        document.getElementById("editCarroVencSeguro").value = c.vencSeguro || "";
+
+        document.getElementById('modalEditCarro').style.display = 'flex';
+    }
+
+    function fecharModalEditCarro() { document.getElementById('modalEditCarro').style.display = 'none'; }
+
+    function salvarEdicaoCarro() {
+        db.veiculosDB.carro.nome = document.getElementById("editCarroNome").value;
+        db.veiculosDB.carro.ano = document.getElementById("editCarroAno").value;
+        db.veiculosDB.carro.kmAtual = parseInt(document.getElementById("editCarroKm").value) || db.veiculosDB.carro.kmAtual;
+        db.veiculosDB.carro.kmRevisao = parseInt(document.getElementById("editCarroKmRevisao").value) || 0;
+        db.veiculosDB.carro.dataRevisao = document.getElementById("editCarroDataRevisao").value || "";
+        
+        db.veiculosDB.carro.codigoFipe = document.getElementById("editCarroCodigoFipe").value.trim() || "";
+        db.veiculosDB.carro.anoFipe = parseInt(document.getElementById("editCarroAnoFipe").value) || "";
+        db.veiculosDB.carro.kmPneu = parseInt(document.getElementById("editCarroKmPneu").value) || "";
+        db.veiculosDB.carro.mesLicenciamento = document.getElementById("editCarroMesLicenciamento").value || "";
+        db.veiculosDB.carro.vencSeguro = document.getElementById("editCarroVencSeguro").value || "";
+
+        salvar(); fecharModalEditCarro(); renderVeiculos();
+    }
+
+    function abrirModalLogCarro(tipo) {
+        document.getElementById("tipoLogCarro").value = tipo;
+        document.getElementById("tituloLogCarro").innerText = tipo === 'Abastecimento' ? '⛽ Novo Abastecimento' : '🔧 Nova Manutenção';
+        
+        if (tipo === 'Abastecimento') {
+            document.getElementById("boxAbastecimento").style.display = 'grid';
+        } else {
+            document.getElementById("boxAbastecimento").style.display = 'none';
+        }
+
+        document.getElementById("logCarroDesc").placeholder = tipo === 'Abastecimento' ? 'Posto de Gasolina' : 'Oficina / Serviço (Ex: Troca de Óleo)';
+        
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        
+        document.getElementById("logCarroData").value = `${year}-${month}-${day}`;
+        document.getElementById("logCarroHora").value = `${hours}:${minutes}`;
+        
+        let opts = '<option value="" disabled selected>De onde saiu o dinheiro?</option>';
+        if (db.contas && db.contas.length > 0) {
+            opts += '<optgroup label="Contas Correntes">';
+            db.contas.forEach(c => { opts += `<option value="cc_${c.id}">🏦 ${c.b}</option>`; });
+            opts += '</optgroup>';
+        }
+        if (db.cartoes && db.cartoes.length > 0) {
+            opts += '<optgroup label="Cartões de Crédito / Pré-Pago">';
+            db.cartoes.forEach(c => { 
+                const prepBadge = c.prepago ? ' (Pré-Pago Empresa)' : '';
+                opts += `<option value="card_${c.id}">💳 ${c.nome}${prepBadge}</option>`; 
+            });
+            opts += '</optgroup>';
+        }
+        document.getElementById('logCarroContaOrigem').innerHTML = opts;
+        
+        document.getElementById('modalLogCarro').style.display = 'flex';
+    }
+    function fecharModalLogCarro() { document.getElementById('modalLogCarro').style.display = 'none'; }
+
+    function salvarLogCarro() {
+        const tipo = document.getElementById("tipoLogCarro").value;
+        const km = parseInt(document.getElementById("logCarroKm").value);
+        const valor = parseFloat(document.getElementById("logCarroValor").value);
+        const litros = parseFloat(document.getElementById("logCarroLitros").value) || 0;
+        const precoLitro = parseFloat(document.getElementById("logCarroPrecoLitro").value) || 0;
+        const desc = document.getElementById("logCarroDesc").value || tipo;
+        const origemVal = document.getElementById("logCarroContaOrigem").value;
+        const mesAtual = document.getElementById("mesSelecao").value;
+        
+        const dataInput = document.getElementById("logCarroData").value;
+        const horaInput = document.getElementById("logCarroHora").value;
+
+        if(!origemVal || isNaN(km) || isNaN(valor) || valor <= 0 || !dataInput || !horaInput) {
+            return alert("Preencha Data, Hora, KM, Valor e Forma de Pagamento.");
+        }
+
+        const [anoLog, mesLog, diaLog] = dataInput.split('-');
+        const dataStrApp = `${diaLog}/${mesLog}`; 
+        const dataStrVeiculo = `${diaLog}/${mesLog}/${anoLog} ${horaInput}`;
+
+        if(km > db.veiculosDB.carro.kmAtual) db.veiculosDB.carro.kmAtual = km;
+
+        if (origemVal.startsWith('cc_')) {
+            const ccId = origemVal.split('_')[1]; const conta = db.contas.find(c => c.id == ccId);
+            if (!conta) return;
+            conta.s -= valor;
+            if(!conta.history) conta.history = [];
+            conta.history.unshift({ v: -valor, d: `${dataStrApp} (${desc})`, mes: mesAtual });
+        } else if (origemVal.startsWith('card_')) {
+            const cardId = origemVal.split('_')[1]; const cartao = db.cartoes.find(c => c.id == cardId);
+            if (!cartao) return;
+            
+            // SE FOR PRÉ PAGO (DÉBITO), DESCONTA DIRETO DO SALDO DO CARTÃO E JÁ MARCA PAGO
+            if (cartao.prepago) {
+                cartao.limite -= valor;
+                if(!db.meses[mesAtual]) db.meses[mesAtual] = { limite: 0, itens: [] };
+                db.meses[mesAtual].itens.push({ id: Date.now() + Math.random(), d: desc, v: valor, metodo: origemVal, cat: 'unico', p: true, isPrepago: true });
+            } else {
+                if(!db.meses[mesAtual]) db.meses[mesAtual] = { limite: 0, itens: [] };
+                db.meses[mesAtual].itens.push({ id: Date.now() + Math.random(), d: desc, v: valor, metodo: origemVal, cat: 'unico', p: false });
+            }
+        }
+
+        db.veiculosDB.logs.unshift({ id: Date.now(), tipo, km, valor, litros, precoLitro, desc, data: dataStrVeiculo, mes: mesAtual });
+        
+        document.getElementById("logCarroKm").value = ""; document.getElementById("logCarroValor").value = ""; document.getElementById("logCarroLitros").value = ""; document.getElementById("logCarroPrecoLitro").value = "";
+        salvar(); fecharModalLogCarro(); renderVeiculos();
+    }
+
+    function delLogCarro(id) {
+        if(confirm("Excluir log? (O valor não será estornado do banco, exclua lá manualmente se quiser)")) {
+            db.veiculosDB.logs = db.veiculosDB.logs.filter(x => x.id !== id);
+            salvar(); renderVeiculos();
+        }
+    }
+
+    function renderVeiculos() {
+        if(!db.veiculosDB) return;
+        const c = db.veiculosDB.carro;
+        document.getElementById("veiculoNomeLabel").innerText = c.nome;
+        document.getElementById("veiculoAnoLabel").innerText = "Ano " + c.ano;
+        document.getElementById("veiculoKmAtual").innerText = c.kmAtual.toLocaleString('pt-BR');
+
+        const fipeLabel = document.getElementById("veiculoFipeLabel");
+        if(c.codigoFipe && c.anoFipe) {
+            fipeLabel.innerText = "FIPE: Atualizando...";
+            fetch(`https://brasilapi.com.br/api/fipe/preco/v1/${c.codigoFipe}`)
+            .then(r => r.json())
+            .then(data => {
+                if(Array.isArray(data)) {
+                    let p = data.find(x => x.anoModelo == c.anoFipe);
+                    if(p) fipeLabel.innerText = `FIPE: ${p.valor}`;
+                    else fipeLabel.innerText = "FIPE: Ano não enc.";
+                } else { fipeLabel.innerText = "FIPE: Cód. Inválido"; }
+            }).catch(() => fipeLabel.innerText = "FIPE: Erro Api");
+        } else {
+            fipeLabel.innerText = "FIPE: Não Configurado";
+        }
+
+        let alertHtml = '';
+        const dataAtual = new Date(); dataAtual.setHours(0,0,0,0);
+        
+        // 1. Manutenção Óleo (KM e Tempo)
+        let kmFaltam = (c.kmRevisao && c.kmRevisao > 0) ? (c.kmRevisao - c.kmAtual) : null;
+        let diasFaltam = null;
+
+        if (c.dataRevisao) {
+            const dataAlvo = new Date(c.dataRevisao + 'T00:00:00');
+            const diffTime = dataAlvo.getTime() - dataAtual.getTime();
+            diasFaltam = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        }
+
+        let passouKm = kmFaltam !== null && kmFaltam <= 0;
+        let passouTempo = diasFaltam !== null && diasFaltam <= 0;
+        let proximoKm = kmFaltam !== null && kmFaltam <= 1000;
+        let proximoTempo = diasFaltam !== null && diasFaltam <= 30;
+
+        if (passouKm || passouTempo) {
+            let msg = passouKm ? `Passou ${Math.abs(kmFaltam).toLocaleString('pt-BR')} km do limite!` : `Passou o prazo de 6 meses!`;
+            alertHtml += `<div class="alerta-manutencao" style="background: rgba(255,82,82,0.15); border-color: var(--danger); color: var(--danger);">⚠️ <b>ÓLEO:</b> ${msg}</div>`;
+        } else if (proximoKm || proximoTempo) {
+            let msg = proximoKm ? `Faltam ${kmFaltam.toLocaleString('pt-BR')} km` : `Faltam ${diasFaltam} dias`;
+            alertHtml += `<div class="alerta-manutencao" style="background: rgba(255, 204, 0, 0.15); border-color: var(--euro); color: var(--euro);">⚠️ <b>ÓLEO:</b> Agende a revisão, ${msg}.</div>`;
+        } else if (kmFaltam !== null || diasFaltam !== null) {
+            let msgKm = kmFaltam !== null ? `${kmFaltam.toLocaleString('pt-BR')} km` : '--';
+            let msgTempo = diasFaltam !== null ? `${diasFaltam} dias` : '--';
+            alertHtml += `<div class="alerta-manutencao" style="background: rgba(0,242,152,0.1); border-color: var(--accent); color: var(--accent);">✅ <b>ÓLEO:</b> Troca em ${msgKm} ou ${msgTempo}.</div>`;
+        }
+
+        // 2. IPVA / Licenciamento
+        let [anoSel, mesSel] = document.getElementById("mesSelecao").value.split("-");
+        if (c.mesLicenciamento === mesSel) {
+            alertHtml += `<div class="alerta-manutencao" style="background: rgba(59, 130, 246, 0.15); border-color: var(--blue); color: var(--blue); margin-top:10px;">📄 <b>Atenção:</b> Mês de IPVA/Licenciamento da placa!</div>`;
+        }
+
+        // 3. Seguro
+        if (c.vencSeguro) {
+            const dataSeguro = new Date(c.vencSeguro + 'T00:00:00');
+            const diffSeguro = Math.ceil((dataSeguro.getTime() - dataAtual.getTime()) / (1000 * 60 * 60 * 24));
+            if (diffSeguro < 0) {
+                alertHtml += `<div class="alerta-manutencao" style="background: rgba(255,82,82,0.15); border-color: var(--danger); color: var(--danger); margin-top:10px;">🛡️ <b>URGENTE:</b> Seguro Auto Vencido!</div>`;
+            } else if (diffSeguro <= 30) {
+                alertHtml += `<div class="alerta-manutencao" style="background: rgba(255, 204, 0, 0.15); border-color: var(--euro); color: var(--euro); margin-top:10px;">🛡️ <b>Renovação:</b> Seguro Auto vence em ${diffSeguro} dias.</div>`;
+            }
+        }
+
+        // 4. Rodízio Pneus
+        if (c.kmPneu) {
+            let pneuFaltam = 10000 - (c.kmAtual - c.kmPneu);
+            if (pneuFaltam <= 0) {
+                alertHtml += `<div class="alerta-manutencao" style="background: rgba(255,82,82,0.15); border-color: var(--danger); color: var(--danger); margin-top:10px;">🛞 <b>Rodízio/Alinhamento:</b> Passou ${Math.abs(pneuFaltam).toLocaleString('pt-BR')} km do limite!</div>`;
+            } else if (pneuFaltam <= 1000) {
+                alertHtml += `<div class="alerta-manutencao" style="background: rgba(255, 204, 0, 0.15); border-color: var(--euro); color: var(--euro); margin-top:10px;">🛞 <b>Agende Rodízio:</b> Faltam ${pneuFaltam.toLocaleString('pt-BR')} km.</div>`;
+            }
+        }
+
+        document.getElementById("veiculoAlertaManutencao").innerHTML = alertHtml;
+
+        const mesAtual = document.getElementById("mesSelecao").value;
+        const logsMes = (db.veiculosDB.logs || []).filter(l => l.mes === mesAtual).sort((a,b) => b.km - a.km);
+        
+        let totalLitros = 0, kmInicial = 0, kmFinal = 0;
+        const abastMes = logsMes.filter(l => l.tipo === 'Abastecimento').sort((a,b) => a.km - b.km);
+        if(abastMes.length > 1) {
+            kmInicial = abastMes[0].km; kmFinal = abastMes[abastMes.length-1].km;
+            for(let i=0; i<abastMes.length-1; i++) { totalLitros += abastMes[i].litros; }
+        }
+        let media = (totalLitros > 0 && kmFinal > kmInicial) ? ((kmFinal - kmInicial) / totalLitros).toFixed(1) : "0.0";
+        document.getElementById("veiculoMediaKm").innerText = `${media} km/l`;
+
+        // Dashboard Custo por KM
+        let totalGastoMes = 0;
+        if(logsMes.length > 0) {
+            totalGastoMes = logsMes.reduce((sum, l) => sum + l.valor, 0);
+        }
+        
+        let distanciaMesTotal = 0;
+        if(logsMes.length > 1) {
+            // Arrays is sorted desc by km
+            distanciaMesTotal = logsMes[0].km - logsMes[logsMes.length-1].km;
+        }
+
+        let custoKm = (totalGastoMes > 0 && distanciaMesTotal > 0) ? (totalGastoMes / distanciaMesTotal) : 0;
+        document.getElementById("veiculoCustoKm").innerText = custoKm > 0 ? fM(custoKm) + "/km" : "R$ 0,00";
+
+        let hHtml = '';
+        if (logsMes.length === 0) hHtml = `<div style="text-align:center; color:var(--sub); padding: 20px; font-size:12px;">Sem lançamentos na garagem este mês.</div>`;
+        else {
+            logsMes.forEach(l => {
+                const icon = l.tipo === 'Abastecimento' ? '⛽' : '🔧';
+                const color = l.tipo === 'Abastecimento' ? 'var(--car)' : 'var(--blue)';
+                
+                let details = `KM: ${l.km.toLocaleString('pt-BR')}`;
+                if (l.tipo === 'Abastecimento' && l.litros > 0) {
+                    details += ` • ${l.litros}L`;
+                    if (l.precoLitro > 0) details += ` (${fM(l.precoLitro)}/L)`;
+                }
+                details += ` • ${l.data}`;
+
+                hHtml += `
+                <div class="item" style="border-left: 4px solid ${color}; padding: 12px;">
+                    <div class="item-info">
+                        <span style="font-size:12px; font-weight:800; color:white;">${icon} ${l.desc}</span>
+                        <span style="font-size:10px; color:var(--sub);">${details}</span>
+                    </div>
+                    <div class="item-value-box">
+                        <b style="color:white;">-${fM(l.valor)}</b>
+                        <button onclick="delLogCarro(${l.id})" style="background:none; color:var(--danger); font-size:14px; padding:0 4px;">🗑️</button>
+                    </div>
+                </div>`;
+            });
+        }
+        document.getElementById("veiculoLogsList").innerHTML = hHtml;
+    }
+
+    // ==========================================
+    // VELOE / TAGS
+    // ==========================================
+    function abrirModalRecargaVeloe() {
+        let opts = '<option value="" disabled selected>De onde saiu o dinheiro?</option>';
+        if (db.contas && db.contas.length > 0) {
+            opts += '<optgroup label="Contas Correntes">';
+            db.contas.forEach(c => { opts += `<option value="cc_${c.id}">🏦 ${c.b} (Saldo: ${fM(c.s)})</option>`; });
+            opts += '</optgroup>';
+        }
+        if (db.cartoes && db.cartoes.length > 0) {
+            opts += '<optgroup label="Cartões de Crédito / Pré-Pago">';
+            db.cartoes.forEach(c => { opts += `<option value="card_${c.id}">💳 ${c.nome}${c.prepago ? ' (Débito)' : ''}</option>`; });
+            opts += '</optgroup>';
+        }
+        document.getElementById('veloeContaOrigem').innerHTML = opts;
+        document.getElementById('veloeValorRecarga').value = '';
+        document.getElementById('modalRecargaVeloe').style.display = 'flex';
+    }
+
+    function fecharModalRecargaVeloe() { document.getElementById('modalRecargaVeloe').style.display = 'none'; }
+
+    function salvarRecargaVeloe() {
+        const origemVal = document.getElementById('veloeContaOrigem').value;
+        const valor = parseFloat(document.getElementById('veloeValorRecarga').value);
+
+        if (!origemVal || isNaN(valor) || valor <= 0) return alert("Selecione a origem e digite o valor.");
+
+        const mesAtual = document.getElementById("mesSelecao").value;
+        const dataStr = new Date().toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit'});
+        let nomeOrigem = "";
+
+        if (origemVal.startsWith('cc_')) {
+            const ccId = origemVal.split('_')[1]; const conta = db.contas.find(c => c.id == ccId);
+            if (!conta) return;
+            conta.s -= valor;
+            if(!conta.history) conta.history = [];
+            conta.history.unshift({ v: -valor, d: `${dataStr} (Recarga Veloe)`, mes: mesAtual });
+            nomeOrigem = `Conta: ${conta.b}`;
+        } else if (origemVal.startsWith('card_')) {
+            const cardId = origemVal.split('_')[1]; const cartao = db.cartoes.find(c => c.id == cardId);
+            if (!cartao) return;
+            
+            // SE FOR PRÉ PAGO (DÉBITO), DESCONTA DO SALDO
+            if(cartao.prepago) {
+                cartao.limite -= valor;
+                if(!db.meses[mesAtual]) db.meses[mesAtual] = { limite: 0, itens: [] };
+                db.meses[mesAtual].itens.push({ id: Date.now() + Math.random(), d: "Recarga Veloe", v: valor, metodo: origemVal, cat: 'unico', p: true, isPrepago: true });
+            } else {
+                if(!db.meses[mesAtual]) db.meses[mesAtual] = { limite: 0, itens: [] };
+                db.meses[mesAtual].itens.push({ id: Date.now() + Math.random(), d: "Recarga Veloe", v: valor, metodo: origemVal, cat: 'unico', p: false });
+            }
+            nomeOrigem = `Cartão: ${cartao.nome}`;
+        }
+
+        db.veloe.saldo += valor;
+        db.veloe.passagens.unshift({ id: Date.now(), tipo: "Recarga", veiculo: "App", local: `Via ${nomeOrigem}`, valor: valor, data: dataStr, mes: mesAtual });
+
+        salvar(); fecharModalRecargaVeloe(); renderVeloe();
+    }
+
+    function abrirModalEditVeiculo(id) {
+        const v = db.veloe.veiculos.find(x => x.id === id);
+        if(!v) return;
+        document.getElementById('editVeiculoId').value = v.id;
+        document.getElementById('editVeiculoNome').value = v.nome;
+        document.getElementById('editVeiculoPlaca').value = v.placa === "---" ? "" : v.placa;
+        document.getElementById('modalEditVeiculo').style.display = 'flex';
+    }
+
+    function fecharModalEditVeiculo() { document.getElementById('modalEditVeiculo').style.display = 'none'; }
+
+    function salvarEdicaoVeiculo() {
+        const id = parseInt(document.getElementById('editVeiculoId').value);
+        const nome = document.getElementById('editVeiculoNome').value || "Veículo";
+        let placa = document.getElementById('editVeiculoPlaca').value.toUpperCase().trim() || "---";
+
+        const v = db.veloe.veiculos.find(x => x.id === id);
+        if(v) { v.nome = nome; v.placa = placa; salvar(); }
+        fecharModalEditVeiculo(); renderVeloe();
+    }
+
+    function addPassagemVeloe() {
+        const vId = document.getElementById('veloeVeiculoSel').value;
+        const tipo = document.getElementById('veloeTipoSel').value;
+        const local = document.getElementById('veloeLocal').value || "-";
+        const valor = parseFloat(document.getElementById('veloeValor').value);
+
+        if (!vId || isNaN(valor) || valor <= 0) return alert("Preencha veículo, tipo e valor.");
+
+        const v = db.veloe.veiculos.find(x => x.id == vId);
+        const nomePlaca = v ? `${v.nome} (${v.placa})` : "Veículo Removido";
+        const mesAtual = document.getElementById("mesSelecao").value;
+        const dataStr = new Date().toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit'});
+
+        db.veloe.saldo -= valor;
+        db.veloe.passagens.unshift({ id: Date.now(), tipo: tipo, veiculo: nomePlaca, local: local, valor: -valor, data: dataStr, mes: mesAtual });
+
+        document.getElementById('veloeLocal').value = ""; document.getElementById('veloeValor').value = "";
+        salvar(); renderVeloe();
+    }
+
+    function delPassagemVeloe(id) {
+        if(confirm("Excluir registro e estornar valor para a Tag?")) {
+            const p = db.veloe.passagens.find(x => x.id === id);
+            if(p) { db.veloe.saldo -= p.valor; db.veloe.passagens = db.veloe.passagens.filter(x => x.id !== id); salvar(); renderVeloe(); }
+        }
+    }
+
+    function renderVeloe() {
+        if(!db.veloe) return;
+        const mesAtual = document.getElementById("mesSelecao").value;
+        document.getElementById('veloeSaldoAtual').innerText = fM(db.veloe.saldo);
+        document.getElementById('veloeSaldoAtual').style.color = db.veloe.saldo < 0 ? "var(--danger)" : "var(--veloe)";
+
+        let vHtml = ''; let selHtml = '';
+        (db.veloe.veiculos || []).forEach(v => {
+            selHtml += `<option value="${v.id}">${v.nome}</option>`;
+            vHtml += `
+            <div class="veiculo-card">
+                <div>
+                    <div style="font-weight:800; font-size:14px; color:white; margin-bottom:4px;">${v.nome}</div>
+                    <div class="placa-badge">${v.placa}</div>
+                </div>
+                <button onclick="abrirModalEditVeiculo(${v.id})" style="background:rgba(255,255,255,0.1); color:white; width:40px; height:40px; border-radius:12px; padding:0;">✏️</button>
+            </div>`;
+        });
+        document.getElementById('veloeVeiculosList').innerHTML = vHtml;
+        document.getElementById('veloeVeiculoSel').innerHTML = selHtml;
+
+        let hHtml = '';
+        const passagensFiltradas = (db.veloe.passagens || []).filter(p => p.mes === mesAtual);
+        if (passagensFiltradas.length === 0) hHtml = `<div style="text-align:center; color:var(--sub); padding: 20px; font-size:12px;">Nenhuma passagem registrada neste mês.</div>`;
+        else {
+            passagensFiltradas.forEach(p => {
+                const isRecarga = p.valor > 0; const corIcon = isRecarga ? "var(--veloe)" : "var(--blue)"; const icon = isRecarga ? "💰" : (p.tipo === "Pedágio" ? "🛣️" : "🅿️");
+                hHtml += `
+                <div class="item" style="border-left: 4px solid ${corIcon}; padding: 12px;">
+                    <div class="item-info">
+                        <span style="font-size:12px; font-weight:800; color:white;">${icon} ${p.tipo} <span style="font-size:10px; font-weight:400; color:var(--sub);">(${p.data})</span></span>
+                        <span style="font-size:10px; color:var(--sub);">${p.veiculo} • ${p.local}</span>
+                    </div>
+                    <div class="item-value-box">
+                        <b style="color: ${isRecarga ? 'var(--veloe)' : 'white'};">${p.valor > 0 ? '+' : ''}${fM(p.valor)}</b>
+                        <button onclick="delPassagemVeloe(${p.id})" style="background:none; color:var(--danger); font-size:14px; padding:0 4px;">🗑️</button>
+                    </div>
+                </div>`;
+            });
+        }
+        document.getElementById('veloePassagensList').innerHTML = hHtml;
+    }
+
+    // ==========================================
+    // FIIs API B3 E LÓGICA
+    // ==========================================
+    async function buscarDadosFII_Exatos(ticker) {
+        try {
+            const tk = ticker.toUpperCase().trim() + '.SA';
+            const res = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(`https://query1.finance.yahoo.com/v8/finance/chart/${tk}?interval=1d&range=6mo&events=div&t=${Date.now()}`)}`);
+            if(!res.ok) return null;
+            const data = await res.json();
+            if(data.chart && data.chart.result && data.chart.result.length > 0) {
+                const info = data.chart.result[0]; const precoAtual = info.meta.regularMarketPrice; let div = 0;
+                if (info.events && info.events.dividends) { const divsObj = info.events.dividends; const timestamps = Object.keys(divsObj).sort((a,b) => b - a); if (timestamps.length > 0) div = divsObj[timestamps[0]].amount; }
+                return { preco: precoAtual, dividendoExato: div };
+            }
+        } catch(e) { console.error("Erro FII:", e); } return null;
+    }
+
+    function abrirModalFii() { document.getElementById('modalFii').style.display = 'flex'; }
+    function fecharModalFii() { document.getElementById('modalFii').style.display = 'none'; }
+    async function salvarFii() {
+        const ticker = document.getElementById("novoFiiTicker").value.toUpperCase().trim(); const qtd = parseInt(document.getElementById("novoFiiQtd").value); const pm = parseFloat(document.getElementById("novoFiiPM").value);
+        if(!ticker || isNaN(qtd) || isNaN(pm)) return alert("Preencha Código, Quantidade e Preço.");
+        const btn = document.getElementById("btnSalvarFii"); btn.innerText = "Buscando..."; btn.disabled = true;
+        const dadosB3 = await buscarDadosFII_Exatos(ticker);
+        let precoAtual = dadosB3 ? dadosB3.preco : pm; let rend = dadosB3 ? dadosB3.dividendoExato : 0; 
+        
+        let fii = db.fiis.find(f => f.ticker === ticker);
+        if (fii) { const custoAnt = fii.qtd * fii.pm; const custoNov = qtd * pm; fii.qtd += qtd; fii.pm = (custoAnt + custoNov) / fii.qtd; fii.atual = precoAtual; fii.rendimentoPorCota = rend; } 
+        else { db.fiis.push({ id: Date.now(), ticker, qtd, pm, atual: precoAtual, rendimentoPorCota: rend }); }
+        salvar(); document.getElementById("novoFiiTicker").value = ""; document.getElementById("novoFiiQtd").value = ""; document.getElementById("novoFiiPM").value = "";
+        btn.innerText = "Adicionar"; btn.disabled = false; fecharModalFii();
+    }
+
+    function abrirModalEditFii(id) {
+        const f = db.fiis.find(x => x.id === id); if(!f) return;
+        document.getElementById("editFiiId").value = f.id; document.getElementById("editFiiTicker").value = f.ticker; document.getElementById("editFiiQtd").value = f.qtd; document.getElementById("editFiiPM").value = f.pm;
+        document.getElementById('modalEditFii').style.display = 'flex';
+    }
+    function fecharModalEditFii() { document.getElementById('modalEditFii').style.display = 'none'; }
+    async function salvarEdicaoFii() {
+        const id = parseInt(document.getElementById("editFiiId").value); const ticker = document.getElementById("editFiiTicker").value.toUpperCase().trim(); const qtd = parseInt(document.getElementById("editFiiQtd").value); const pm = parseFloat(document.getElementById("editFiiPM").value);
+        if(!ticker || isNaN(qtd) || isNaN(pm)) return;
+        const btn = document.getElementById("btnSalvarEditFii"); btn.innerText = "Buscando..."; btn.disabled = true;
+        const f = db.fiis.find(x => x.id === id);
+        if(f) { f.ticker = ticker; f.qtd = qtd; f.pm = pm; const d = await buscarDadosFII_Exatos(ticker); if(d) { f.atual = d.preco; f.rendimentoPorCota = d.dividendoExato; } }
+        salvar(); fecharModalEditFii(); btn.innerText = "Salvar Alterações"; btn.disabled = false;
+    }
+    function delFii(id) { if(confirm("Excluir FII?")) { db.fiis = db.fiis.filter(x => x.id !== id); salvar(); } }
+    async function atualizarCotacoesFIIs(forcar = false) {
+        if(!db.fiis || db.fiis.length === 0) return; const agora = Date.now(); if (!forcar && (agora - ultimaAtualizacaoB3 < 180000)) return; 
+        const btn = document.getElementById("btnAtualizarCotacoes"); btn.innerHTML = "⏳ Sincronizando..."; btn.disabled = true;
+        let atualizou = false;
+        for (let i = 0; i < db.fiis.length; i++) { let d = await buscarDadosFII_Exatos(db.fiis[i].ticker); if(d && (db.fiis[i].atual !== d.preco || db.fiis[i].rendimentoPorCota !== d.dividendoExato)) { db.fiis[i].atual = d.preco; db.fiis[i].rendimentoPorCota = d.dividendoExato; atualizou = true; } }
+        ultimaAtualizacaoB3 = Date.now(); if (atualizou) salvar(); else render(); 
+        btn.innerHTML = '🔄 Sincronizar B3'; btn.disabled = false;
+    }
+
+    // ==========================================
+    // ROTINAS PRINCIPAIS (FINANÇAS/CARTÃO/LOGIN)
+    // ==========================================
+    function getBandeiraLogo(b) {
+        if(b === 'mastercard') return '<svg viewBox="0 0 36 24" width="30" height="20"><circle cx="12" cy="12" r="12" fill="#eb001b" opacity="0.9"/><circle cx="24" cy="12" r="12" fill="#f79e1b" opacity="0.9"/></svg>';
+        if(b === 'visa') return '<div style="font-style:italic; font-weight:900; font-size:18px; color:#fff; line-height:20px;">VISA</div>';
+        if(b === 'amex') return '<div style="background:#006fcf; color:#fff; font-weight:bold; font-size:9px; padding:2px 4px; border-radius:4px; line-height:16px;">AMEX</div>';
+        if(b === 'elo') return '<div style="font-weight:900; font-size:16px; color:#fff; letter-spacing:-1px; line-height:20px;">elo</div>';
+        return '';
+    }
+
+    function inicializarInterface() {
+        const inputMes = document.getElementById("mesSelecao"); if(!inputMes.value) inputMes.value = new Date().toISOString().slice(0, 7);
+        const selectParcelas = document.getElementById("parcelas"); let opcoesParcelas = '<option value="1">À vista</option>';
+        for(let i = 2; i <= 21; i++) { opcoesParcelas += `<option value="${i}">${i}x</option>`; } selectParcelas.innerHTML = opcoesParcelas;
+        const cores = ["linear-gradient(135deg, #1e3a8a, #0f172a)", "linear-gradient(135deg, #111827, #000000)", "linear-gradient(135deg, #374151, #1f2937)", "linear-gradient(135deg, #b45309, #78350f)", "linear-gradient(135deg, #064e3b, #022c22)", "linear-gradient(135deg, #7e22ce, #4c1d95)", "linear-gradient(135deg, #f97316, #c2410c)", "linear-gradient(135deg, #ef4444, #991b1b)", "linear-gradient(135deg, #0ea5e9, #0369a1)", "linear-gradient(135deg, #ec4899, #9d174d)"];
+        const colorSelector = document.getElementById("cartaoColorSelector"); colorSelector.innerHTML = cores.map((cor, i) => `<div class="color-opt ${i===0 ? 'active' : ''}" style="background: ${cor};" data-color="${cor}"></div>`).join('');
+        document.querySelectorAll('.color-opt').forEach(opt => { opt.addEventListener('click', () => { document.querySelectorAll('.color-opt').forEach(o => o.classList.remove('active')); opt.classList.add('active'); selectedColor = opt.dataset.color; }); });
+    }
+
+    async function getRates() {
+        try { 
+            const response = await fetch('https://economia.awesomeapi.com.br/last/EUR-BRL,USD-BRL'); 
+            const data = await response.json(); 
+            cotaEuro = parseFloat(data.EURBRL.bid); document.getElementById('euroTaxa').innerText = fM(cotaEuro); 
+            const pctE = parseFloat(data.EURBRL.pctChange); const varEl = document.getElementById('euroVar'); varEl.innerText = `${pctE >= 0 ? "▲" : "▼"} ${Math.abs(pctE)}%`; varEl.style.color = pctE >= 0 ? "var(--accent)" : "var(--danger)"; 
+            cotaUsd = parseFloat(data.USDBRL.bid); document.getElementById('usdTaxa').innerText = fM(cotaUsd); 
+            const pctU = parseFloat(data.USDBRL.pctChange); const varUsd = document.getElementById('usdVar'); varUsd.innerText = `${pctU >= 0 ? "▲" : "▼"} ${Math.abs(pctU)}%`; varUsd.style.color = pctU >= 0 ? "var(--accent)" : "var(--danger)"; 
+            render(); 
+        } catch(e) {}
+    }
+
+    function autenticar() {
+        const e = document.getElementById("email").value, p = document.getElementById("password").value; const errorEl = document.getElementById("errorMsg");
+        if(!e || !p) return errorEl.innerText = "Preencha e-mail e senha!";
+        auth.signInWithEmailAndPassword(e, p).catch((err) => {
+            if(err.code === 'auth/user-not-found' || err.code === 'auth/invalid-credential') auth.createUserWithEmailAndPassword(e, p).catch(e => errorEl.innerText = e.message); else errorEl.innerText = err.message;
+        });
+    }
+
+    auth.onAuthStateChanged(user => {
+        if(user) {
+            userUid = user.uid; document.getElementById("loginScreen").style.display = "none"; document.getElementById("app").style.display = "block";
+            firebaseDb.ref('users/' + userUid).on('value', snap => {
+                if(snap.exists()) {
+                    db = snap.val();
+                    if(!db.meses) db.meses = {}; if(!db.fixosMestre) db.fixosMestre = []; if(!db.inv) db.inv = []; if(!db.fiis) db.fiis = []; if(!db.contas) db.contas = []; if(!db.cartoes) db.cartoes = [];
+                    checkExtraDBsInit();
+                }
+                carregarTudo();
+                if (document.getElementById('abaVeloe').style.display === 'block') renderVeloe();
+                if (document.getElementById('abaCripto').style.display === 'block') renderCripto();
+                if (document.getElementById('abaVeiculos').style.display === 'block') renderVeiculos();
+            });
+        } else {
+            userUid = null; document.getElementById("loginScreen").style.display = "flex"; document.getElementById("app").style.display = "none";
+        }
+    });
+
+    function mudarMes(delta) {
+        const inputMes = document.getElementById("mesSelecao"); let [ano, mes] = inputMes.value.split("-").map(Number);
+        mes += delta; if(mes < 1) { mes = 12; ano--; } else if(mes > 12) { mes = 1; ano++; }
+        inputMes.value = `${ano}-${String(mes).padStart(2, '0')}`;
+        carregarTudo();
+        if (document.getElementById('abaVeloe').style.display === 'block') renderVeloe();
+        if (document.getElementById('abaVeiculos').style.display === 'block') renderVeiculos();
+    }
+
+    function abrirModalInv() { document.getElementById("modalInv").style.display = "flex"; }
+    function fecharModalInv() { document.getElementById("modalInv").style.display = "none"; }
+    function salvarModalInv() { 
+        const n = document.getElementById("invNome").value, s = parseFloat(document.getElementById("invSaldo").value) || 0, m = document.getElementById("invMoeda").value; 
+        if(n) { db.inv.push({ id: Date.now(), b: n, s: s, m: m, history: [{ v: s, d: new Date().toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit'}), mes: document.getElementById("mesSelecao").value }] }); salvar(); fecharModalInv(); }
+    }
+    function addSaldoInv(id) { const i = db.inv.find(x => x.id === id); if(!i) return; const v = prompt(`Somar em ${i.b}:`); if(v) { const num = parseFloat(v.replace(',','.')); if (isNaN(num)) return; i.s += num; if(!i.history) i.history = []; i.history.unshift({ v: num, d: new Date().toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit'}), mes: document.getElementById("mesSelecao").value }); salvar(); } }
+    function editarSaldoInv(id) { const i = db.inv.find(x => x.id === id); if(!i) return; const novoValorStr = prompt(`Editar saldo atual de "${i.b}":`, i.s); if(novoValorStr !== null) { const novoValor = parseFloat(novoValorStr.replace(',','.')); if(!isNaN(novoValor)) { const diferenca = novoValor - i.s; i.s = novoValor; if(diferenca !== 0) { if(!i.history) i.history = []; i.history.unshift({ v: diferenca, d: new Date().toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit'}) + " (Edição)", mes: document.getElementById("mesSelecao").value }); } salvar(); } } }
+    function delInv(id) { if(confirm("Excluir investimento?")) { db.inv = db.inv.filter(x => x.id !== id); salvar(); } }
+    function limparHistoricoInv(id) { if(confirm("Limpar histórico?")) { const i = db.inv.find(x => x.id === id); if(i) { i.history = []; salvar(); } } }
+
+    function abrirModalConta() { document.getElementById("modalConta").style.display = "flex"; }
+    function fecharModalConta() { document.getElementById("modalConta").style.display = "none"; }
+    function salvarModalConta() { 
+        const ic = document.getElementById("ccIcon").value;
+        const n = document.getElementById("ccNome").value || document.getElementById("ccIcon").options[document.getElementById("ccIcon").selectedIndex].text;
+        const s = parseFloat(document.getElementById("ccSaldo").value) || 0; 
+        if(n) { if(!db.contas) db.contas = []; db.contas.push({ id: Date.now(), b: n, icon: ic, s: s, history: [{ v: s, d: new Date().toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit'}), mes: document.getElementById("mesSelecao").value }] }); salvar(); fecharModalConta(); }
+    }
+    function addSaldoConta(id) { const i = db.contas.find(x => x.id === id); if(!i) return; const v = prompt(`Adicionar saldo na conta ${i.b}:`); if(v) { const num = parseFloat(v.replace(',','.')); if (isNaN(num)) return; i.s += num; if(!i.history) i.history = []; i.history.unshift({ v: num, d: new Date().toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit'}), mes: document.getElementById("mesSelecao").value }); salvar(); } }
+    function editarSaldoConta(id) { const i = db.contas.find(x => x.id === id); if(!i) return; const novoValorStr = prompt(`Editar saldo atual da conta "${i.b}":`, i.s); if(novoValorStr !== null) { const novoValor = parseFloat(novoValorStr.replace(',','.')); if(!isNaN(novoValor)) { const diferenca = novoValor - i.s; i.s = novoValor; if(diferenca !== 0) { if(!i.history) i.history = []; i.history.unshift({ v: diferenca, d: new Date().toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit'}) + " (Edição)", mes: document.getElementById("mesSelecao").value }); } salvar(); } } }
+    function delConta(id) { if(confirm("Excluir conta corrente?")) { db.contas = db.contas.filter(x => x.id !== id); salvar(); } }
+    function limparHistoricoConta(id) { if(confirm("Limpar histórico da conta?")) { const i = db.contas.find(x => x.id === id); if(i) { i.history = []; salvar(); } } }
+
+    function abrirModalTransferencia() {
+        let optsOrigem = '<option value="" disabled selected>De onde vai sair...</option>';
+        if (db.contas && db.contas.length > 0) { optsOrigem += '<optgroup label="Contas Correntes (BRL)">'; db.contas.forEach(c => { optsOrigem += `<option value="cc_${c.id}" data-moeda="BRL">🏦 ${c.b} (Saldo: ${fM(c.s)})</option>`; }); optsOrigem += '</optgroup>'; }
+        if (db.inv && db.inv.length > 0) { optsOrigem += '<optgroup label="Investimentos (Patrimônio)">'; db.inv.forEach(i => { optsOrigem += `<option value="inv_${i.id}" data-moeda="${i.m}">📈 ${i.b} (${i.m}) (Saldo: ${fM(i.s, i.m)})</option>`; }); optsOrigem += '</optgroup>'; }
+        document.getElementById('transfOrigem').innerHTML = optsOrigem;
+
+        let optsDestino = '<option value="" disabled selected>Para onde vai...</option>';
+        if (db.contas && db.contas.length > 0) { optsDestino += '<optgroup label="Contas Correntes (BRL)">'; db.contas.forEach(c => { optsDestino += `<option value="cc_${c.id}" data-moeda="BRL">🏦 ${c.b}</option>`; }); optsDestino += '</optgroup>'; }
+        if (db.inv && db.inv.length > 0) { optsDestino += '<optgroup label="Investimentos (Patrimônio)">'; db.inv.forEach(i => { optsDestino += `<option value="inv_${i.id}" data-moeda="${i.m}">📈 ${i.b} (${i.m})</option>`; }); optsDestino += '</optgroup>'; }
+        document.getElementById('transfDestino').innerHTML = optsDestino;
+
+        document.getElementById('transfValor').value = ''; document.getElementById('transfValor').placeholder = 'Valor a debitar'; document.getElementById('transfValorConvertido').value = ''; document.getElementById('transfValorConvertido').style.display = 'none';
+
+        function checkMoedas() {
+            const selO = document.getElementById('transfOrigem'); const selD = document.getElementById('transfDestino');
+            if(selO.selectedIndex <= 0 || selD.selectedIndex <= 0) return;
+            const mO = selO.options[selO.selectedIndex].getAttribute('data-moeda'); const mD = selD.options[selD.selectedIndex].getAttribute('data-moeda');
+            document.getElementById('transfValor').placeholder = `Valor a debitar (${mO})`;
+            if (mO !== mD && mO && mD) { document.getElementById('transfValorConvertido').style.display = 'block'; document.getElementById('transfValorConvertido').placeholder = `Valor recebido em ${mD}`; } 
+            else { document.getElementById('transfValorConvertido').style.display = 'none'; }
+        }
+        document.getElementById('transfOrigem').onchange = checkMoedas; document.getElementById('transfDestino').onchange = checkMoedas;
+        document.getElementById('modalTransferencia').style.display = 'flex';
+    }
+
+    function fecharModalTransferencia() { document.getElementById('modalTransferencia').style.display = 'none'; }
+    function salvarTransferencia() {
+        const selO = document.getElementById('transfOrigem'); const selD = document.getElementById('transfDestino'); const origemVal = selO.value; const destinoVal = selD.value;
+        const valor = parseFloat(document.getElementById('transfValor').value); const valorConvInput = document.getElementById('transfValorConvertido');
+        const valorConvertido = valorConvInput.style.display === 'block' && valorConvInput.value ? parseFloat(valorConvInput.value) : valor;
+
+        if (!origemVal || !destinoVal || isNaN(valor) || valor <= 0) return alert("Preencha origem, destino e valor.");
+        if (origemVal === destinoVal) return alert("A conta de origem e destino não podem ser iguais.");
+
+        const mesAtual = document.getElementById("mesSelecao").value; const dataStr = new Date().toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit'});
+
+        const tipoOrig = origemVal.split('_')[0]; const origId = origemVal.split('_')[1]; let contaOrigem = null;
+        if (tipoOrig === 'cc') contaOrigem = db.contas.find(c => c.id == origId); else if (tipoOrig === 'inv') contaOrigem = db.inv.find(i => i.id == origId);
+        if (!contaOrigem) return;
+
+        const tipoDest = destinoVal.split('_')[0]; const destId = destinoVal.split('_')[1]; let contaDestino = null;
+        if (tipoDest === 'cc') contaDestino = db.contas.find(c => c.id == destId); else if (tipoDest === 'inv') contaDestino = db.inv.find(i => i.id == destId);
+        if (!contaDestino) return;
+
+        contaOrigem.s -= valor; if(!contaOrigem.history) contaOrigem.history = []; contaOrigem.history.unshift({ v: -valor, d: `${dataStr} (Para: ${contaDestino.b})`, mes: mesAtual });
+        contaDestino.s += valorConvertido; if(!contaDestino.history) contaDestino.history = []; contaDestino.history.unshift({ v: valorConvertido, d: `${dataStr} (De: ${contaOrigem.b})`, mes: mesAtual });
+
+        salvar(); fecharModalTransferencia();
+    }
+
+    // BOTÃO PARA INJETAR SALDO NO CARTÃO PRÉ PAGO
+    function addSaldoCartaoPrepago(id) {
+        const c = db.cartoes.find(x => x.id === id);
+        if(!c) return;
+        const v = prompt(`Adicionar saldo no cartão ${c.nome}:`);
+        if(v) {
+            const num = parseFloat(v.replace(',','.'));
+            if(!isNaN(num) && num > 0) {
+                c.limite += num; 
+                salvar();
+            }
+        }
+    }
+
+    function abrirModalCartao(idx = null) {
+        document.getElementById("modalCartao").style.display = "flex"; const btnEx = document.getElementById("btnExcluirCartao");
+        if(idx !== null) {
+            const c = db.cartoes[idx]; document.getElementById("editCartaoIdx").value = idx; document.getElementById("cfgCartaoNome").value = c.nome; document.getElementById("cfgCartaoLimite").value = c.limite; document.getElementById("cfgCartaoFech").value = c.fech; document.getElementById("cfgCartaoVenc").value = c.venc; document.getElementById("cfgCartaoBandeira").value = c.bandeira || "outra";
+            document.getElementById("cfgCartaoPrepago").checked = c.prepago || false;
+            
+            if (c.prepago) { document.getElementById("cfgCartaoLimite").placeholder = "Saldo Atual (R$)"; document.getElementById("boxDatasCartao").style.display = "none"; } 
+            else { document.getElementById("cfgCartaoLimite").placeholder = "Limite Total (R$)"; document.getElementById("boxDatasCartao").style.display = "grid"; }
+
+            selectedColor = c.cor; btnEx.style.display = "block"; document.querySelectorAll('.color-opt').forEach(o => { o.classList.remove('active'); if(o.dataset.color === c.cor) o.classList.add('active'); });
+        } else {
+            document.getElementById("editCartaoIdx").value = ""; document.getElementById("cfgCartaoNome").value = ""; document.getElementById("cfgCartaoLimite").value = ""; document.getElementById("cfgCartaoBandeira").value = "mastercard"; 
+            document.getElementById("cfgCartaoPrepago").checked = false;
+            document.getElementById("cfgCartaoLimite").placeholder = "Limite Total (R$)"; document.getElementById("boxDatasCartao").style.display = "grid";
+            btnEx.style.display = "none";
+        }
+    }
+    function salvarConfigCartao() {
+        const idx = document.getElementById("editCartaoIdx").value; 
+        const c = { 
+            id: idx !== "" ? db.cartoes[idx].id : Date.now(), 
+            nome: document.getElementById("cfgCartaoNome").value || "Cartão", 
+            limite: parseFloat(document.getElementById("cfgCartaoLimite").value) || 0, 
+            fech: document.getElementById("cfgCartaoFech").value, 
+            venc: document.getElementById("cfgCartaoVenc").value, 
+            cor: selectedColor, 
+            bandeira: document.getElementById("cfgCartaoBandeira").value,
+            prepago: document.getElementById("cfgCartaoPrepago").checked
+        };
+        if(idx !== "") db.cartoes[idx] = c; else db.cartoes.push(c); salvar(); fecharModalCartao();
+    }
+    function fecharModalCartao() { document.getElementById("modalCartao").style.display = "none"; }
+    function excluirCartao() { const idx = document.getElementById("editCartaoIdx").value; db.cartoes.splice(idx, 1); salvar(); fecharModalCartao(); }
+
+    function carregarTudo() {
+        const mes = document.getElementById("mesSelecao").value;
+        if (!db.meses[mes]) db.meses[mes] = { limite: 0, itens: [] };
+        if (!db.meses[mes].itens) db.meses[mes].itens = [];
+        let alterouFixos = false;
+        if(db.fixosMestre && db.fixosMestre.length > 0) {
+            db.fixosMestre.forEach(f => { 
+                if((!f.startMes || mes >= f.startMes) && !db.meses[mes].itens.some(item => item.d === f.d)) {
+                   db.meses[mes].itens.push({ d: f.d, v: f.v, metodo: f.metodo, cat: f.cat, startMes: f.startMes, id: Date.now() + Math.random(), p: false }); alterouFixos = true;
+                }
+            });
+        }
+        document.getElementById("limiteInput").value = db.meses[mes].limite || "";
+        if(alterouFixos) salvar(); else render();
+    }
+
+    function ajustarTetoOp(tipo) { const mes = document.getElementById("mesSelecao").value; const atual = parseFloat(document.getElementById("limiteInput").value) || 0; const valStr = prompt(tipo === 'add' ? "Somar ao teto:" : "Subtrair do teto:"); if(valStr) { const val = parseFloat(valStr.replace(',','.')); if(!isNaN(val)) { db.meses[mes].limite = tipo === 'add' ? (atual + val) : (atual - val); document.getElementById("limiteInput").value = db.meses[mes].limite; salvar(); } } }
+    function salvarAjustes() { const mes = document.getElementById("mesSelecao").value; db.meses[mes].limite = parseFloat(document.getElementById("limiteInput").value) || 0; salvar(); }
+    function prepararLancamentoCartao(idCartao) { const select = document.getElementById('metodoPag'); select.value = 'card_' + idCartao; const areaLancamento = document.getElementById('areaNovoLancamento'); areaLancamento.scrollIntoView({ behavior: 'smooth', block: 'center' }); setTimeout(() => document.getElementById('desc').focus(), 300); }
+    
+    function addGasto() {
+        const d = document.getElementById("desc").value, v = parseFloat(document.getElementById("val").value), p = parseInt(document.getElementById("parcelas").value), metodo = document.getElementById("metodoPag").value, fixo = document.getElementById("isFixo").checked, inputMes = document.getElementById("mesSelecao").value;
+        if(!metodo) return alert("Por favor, selecione de onde vai sair ou marque como Avulso."); if(!d || isNaN(v)) return alert("Preencha descrição e valor.");
+        
+        let [anoStr, mesStr] = inputMes.split("-"); let anoNum = parseInt(anoStr), mesNum = parseInt(mesStr);
+        const valorParcela = v/p; 
+
+        // SE O GASTO FOR EM UM CARTÃO PRÉ PAGO (DÉBITO)
+        if(metodo.startsWith('card_')) {
+            const cardId = metodo.split('_')[1];
+            const cartao = db.cartoes.find(c => c.id == cardId);
+            if(cartao && cartao.prepago) {
+                cartao.limite -= v; // DEDUZ O VALOR TOTAL NA HORA
+                // CRIA O GASTO JÁ PAGO E NÃO PARCELA NO FUTURO (Débito)
+                const novoGasto = { d, v: v, metodo, cat: 'unico', p: true, isPrepago: true };
+                if(!db.meses[inputMes]) db.meses[inputMes] = { limite: 0, itens: [] };
+                db.meses[inputMes].itens.push({ ...novoGasto, id: Date.now() + Math.random() });
+                document.getElementById("desc").value = ""; document.getElementById("val").value = ""; salvar();
+                return;
+            }
+        }
+
+        const novoGasto = { d, v: valorParcela, metodo, cat: fixo ? 'fixo' : (p >= 2 ? 'parc' : 'unico'), p: false };
+        if(fixo && !db.fixosMestre.some(x => x.d === d)) { db.fixosMestre.push({ ...novoGasto, startMes: inputMes }); }
+        if(metodo.startsWith('cc_')) { const ccId = metodo.split('_')[1]; const cc = (db.contas || []).find(c => c.id == ccId); if(cc) { cc.s -= valorParcela; if(!cc.history) cc.history = []; cc.history.unshift({ v: -valorParcela, d: new Date().toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit'}) + " (Gasto)", mes: inputMes }); } }
+        
+        for(let i=0; i<p; i++) { let cM = mesNum + i, cA = anoNum; while(cM > 12) { cM -= 12; cA++; } let mF = `${cA}-${String(cM).padStart(2, '0')}`; if(!db.meses[mF]) db.meses[mF] = { limite: 0, itens: [] }; db.meses[mF].itens.push({ ...novoGasto, id: Date.now() + Math.random(), d: d + (p > 1 ? ` (${i+1}/${p})` : "") }); }
+        document.getElementById("desc").value = ""; document.getElementById("val").value = ""; salvar();
+    }
+
+    function delGasto(id) {
+        const mesAtual = document.getElementById("mesSelecao").value; const item = db.meses[mesAtual].itens.find(i => i.id === id); if(!item) return;
+        
+        // DEVOLVER SALDO SE FOR DEBITO/PREPAGO E EXCLUIR
+        if(item.isPrepago && item.metodo.startsWith('card_')) {
+            const cardId = item.metodo.split('_')[1];
+            const cartao = db.cartoes.find(c => c.id == cardId);
+            if (cartao && cartao.prepago) cartao.limite += item.v; // Estorna o saldo
+        }
+
+        if(item.cat === 'fixo') { if(confirm("Deseja interromper esta conta fixa dos próximos meses?")) { db.fixosMestre = db.fixosMestre.filter(f => f.d !== item.d); Object.keys(db.meses).forEach(m => { if(m >= mesAtual && db.meses[m].itens) { db.meses[m].itens = db.meses[m].itens.filter(i => i.d !== item.d); } }); } else { return; } } 
+        else { db.meses[mesAtual].itens = db.meses[mesAtual].itens.filter(i => i.id !== id); }
+        salvar();
+    }
+
+    function editarGasto(id) {
+        const mesAtual = document.getElementById("mesSelecao").value; const item = db.meses[mesAtual].itens.find(i => i.id === id);
+        if(item) { 
+            const novoValorStr = prompt(`Editar valor de "${item.d}":`, item.v); 
+            if(novoValorStr !== null) { 
+                const nV = parseFloat(novoValorStr.replace(',','.')); 
+                if(!isNaN(nV)) { 
+                    
+                    if(item.isPrepago && item.metodo.startsWith('card_')) {
+                        const cardId = item.metodo.split('_')[1];
+                        const cartao = db.cartoes.find(c => c.id == cardId);
+                        if (cartao && cartao.prepago) {
+                            const diff = nV - item.v;
+                            cartao.limite -= diff; // Ajusta o saldo. Se aumentou o gasto, reduz mais o saldo.
+                        }
+                    }
+
+                    item.v = nV; 
+                    if(item.cat === 'fixo') { const mestre = db.fixosMestre.find(f => f.d === item.d); if(mestre && confirm("Atualizar valor base para o futuro?")) mestre.v = nV; } 
+                    salvar(); 
+                } 
+            } 
+        }
+    }
+
+    function fecharModalPagarAvulso() { document.getElementById('modalPagarAvulso').style.display = 'none'; }
+    function togglePago(id) { 
+        const mesAtual = document.getElementById("mesSelecao").value; const item = db.meses[mesAtual].itens.find(i => i.id === id); 
+        if(item) { 
+            if (item.isPrepago) return; // Nao deixa "desmarcar" um gasto debito
+
+            if (!item.p && !item.metodo.startsWith('card_')) {
+                itemPagarAvulsoId = id; document.getElementById('textoPagamentoAvulso').innerHTML = `Lançamento: <b style="color:white;">${item.d}</b><br>Valor: <b style="color:var(--accent); font-size:18px;">${fM(item.v)}</b>`;
+                let opts = `<option value="">Apenas marcar como pago (já debitado / não debitar)</option>`; if(db.contas && db.contas.length > 0) { db.contas.forEach(c => { opts += `<option value="${c.id}">🏦 ${c.b} (Saldo: ${fM(c.s)})</option>`; }); } document.getElementById('selectContaPagamentoAvulso').innerHTML = opts; document.getElementById('modalPagarAvulso').style.display = 'flex';
+            } else { item.p = !item.p; salvar(); }
+        } 
+    }
+    function confirmarPagamentoAvulso() {
+        const select = document.getElementById('selectContaPagamentoAvulso'); const ccId = select.value; const mesAtual = document.getElementById("mesSelecao").value; const item = db.meses[mesAtual].itens.find(i => i.id === itemPagarAvulsoId);
+        if(item) {
+            if (ccId) { const bank = db.contas.find(c => c.id == ccId); if (bank) { bank.s -= item.v; if(!bank.history) bank.history = []; bank.history.unshift({ v: -item.v, d: new Date().toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit'}) + " (Pgto: " + item.d + ")", mes: mesAtual }); item.metodo = `cc_${bank.id}`; } }
+            item.p = true; salvar(); fecharModalPagarAvulso();
+        }
+    }
+
+    function fecharModalPagarFatura() { document.getElementById('modalPagarFatura').style.display = 'none'; }
+    function pagarFaturaInteira(cartaoId) { 
+        const mesAtual = document.getElementById("mesSelecao").value; const itens = db.meses[mesAtual].itens.filter(i => i.metodo === `card_${cartaoId}` && !i.p); valorFaturaSelecionada = itens.reduce((a, b) => a + b.v, 0); cartaoFaturaSelecionado = cartaoId; document.getElementById('textoPagamentoFatura').innerHTML = `Valor total em aberto: <b style="color:white; font-size:18px;">${fM(valorFaturaSelecionada)}</b>`; const select = document.getElementById('selectContaPagamentoFatura'); let opts = `<option value="">Apenas marcar como paga (sem debitar)</option>`; if(db.contas && db.contas.length > 0) { db.contas.forEach(c => { opts += `<option value="${c.id}">${c.b} (Saldo: ${fM(c.s)})</option>`; }); } select.innerHTML = opts; document.getElementById('modalPagarFatura').style.display = 'flex';
+    }
+    function confirmarPagamentoFatura() {
+        const select = document.getElementById('selectContaPagamentoFatura'); const ccId = select.value; const mesAtual = document.getElementById("mesSelecao").value; 
+        if (ccId) { const bank = db.contas.find(c => c.id == ccId); if (bank) { bank.s -= valorFaturaSelecionada; if(!bank.history) bank.history = []; bank.history.unshift({ v: -valorFaturaSelecionada, d: new Date().toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit'}) + " (Pgto Fatura)", mes: mesAtual }); } }
+        db.meses[mesAtual].itens.forEach(i => { if(i.metodo === `card_${cartaoFaturaSelecionado}`) { i.p = true; } }); salvar(); fecharModalPagarFatura();
+    }
+
+    function salvar() { if(userUid) { firebaseDb.ref('users/' + userUid).set(db); } render(); }
+
+    function exportarCSV() {
+        const mesAtual = document.getElementById("mesSelecao").value; const itens = db.meses[mesAtual]?.itens || []; let csvContent = "\uFEFFData/Descricao;Tipo;Valor;Status\n";
+        itens.forEach(i => { const tipo = i.cat === 'fixo' ? 'Fixo' : (i.cat === 'parc' ? 'Parcelado' : 'Único'); const valorFormatado = (-i.v).toFixed(2).replace('.', ','); const status = i.p ? 'Concluido' : 'Pendente'; csvContent += `${i.d.replace(/;/g, ',')};${tipo};${valorFormatado};${status}\n`; });
+        const file = new File([csvContent], `Extrato_Junks_${mesAtual}.csv`, { type: 'text/csv' });
+        if (navigator.canShare && navigator.canShare({ files: [file] })) { navigator.share({ files: [file] }); } else { const a = document.createElement('a'); a.href = window.URL.createObjectURL(file); a.download = `Extrato_Junks_${mesAtual}.csv`; a.click(); }
+    }
+    async function exportarDadosSafe() {
+        const mesAtual = document.getElementById("mesSelecao").value; const dataStr = JSON.stringify(db, null, 2); const fileName = `Junks_Backup_${mesAtual}.json`;
+        if (navigator.canShare && navigator.canShare({ files: [new File([dataStr], fileName, {type: 'application/json'})] })) { try { await navigator.share({ files: [new File([dataStr], fileName, {type: 'application/json'})] }); return; } catch (e) {} }
+        try { await navigator.clipboard.writeText(dataStr); alert("O CÓDIGO DO BACKUP FOI COPIADO PARA SUA ÁREA DE TRANSFERÊNCIA. Abra o WhatsApp e cole para salvar."); } catch (err) { alert("Erro ao gerar backup."); }
+    }
+    function importarDados(input) { const file = input.files[0]; if(!file) return; const reader = new FileReader(); reader.onload = function(e) { try { const iD = JSON.parse(e.target.result); if(confirm("ATENÇÃO: Substituir dados atuais pelo backup importado?")) { db = iD; salvar(); } } catch(err) { alert("Erro ao ler backup!"); } }; reader.readAsText(file); input.value = ''; }
+
+    const bankStyles = {
+        'nubank': { c: '#8A05BE', t: '#fff', svg: '<i class="ibb-nubank"></i>' }, 'itau': { c: '#EC7000', t: '#fff', svg: '<i class="ibb-itau"></i>' }, 'bb': { c: '#FCEB00', t: '#0038A8', svg: '<i class="ibb-banco-brasil"></i>' }, 'bradesco': { c: '#CC092F', t: '#fff', svg: '<i class="ibb-bradesco"></i>' }, 'santander': { c: '#EC0000', t: '#fff', svg: '<i class="ibb-santander"></i>' }, 'inter': { c: '#FF7A00', t: '#fff', svg: '<i class="ibb-inter"></i>' }, 'c6': { c: '#242424', t: '#fff', svg: '<svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none"><circle cx="10" cy="12" r="4.5"/><circle cx="15" cy="12" r="4.5"/></svg>' }, 'caixa': { c: '#005CA9', t: '#fff', svg: '<i class="ibb-caixa"></i>' }, 'sicredi': { c: '#32A041', t: '#fff', svg: '<i class="ibb-sicredi"></i>' }, 'outro': { c: '#475569', t: '#fff', svg: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 10h16v10H4zM12 3l8 5H4z"/></svg>' }
+    };
+    function toggleFatura(id) { faturasVisiveis[id] = !faturasVisiveis[id]; render(); }
+
+    function render() {
+        const mesAtual = document.getElementById("mesSelecao").value; const mesAtivo = db.meses[mesAtual] || { limite: 0, itens: [] };
+        const containerCartoes = document.getElementById("containerCartoes"), containerGastos = document.getElementById("containerGastos"), invL = document.getElementById("investList"), contasList = document.getElementById("contasList"), selectMetodo = document.getElementById("metodoPag"), fiiL = document.getElementById("fiiListContainer");
+        containerCartoes.innerHTML = ""; containerGastos.innerHTML = ""; invL.innerHTML = ""; contasList.innerHTML = ""; fiiL.innerHTML = "";
+        
+        let tBRL = 0, tEUR = 0, tUSD = 0; let totalFiisVal = 0, totalFiisPM = 0, totalDividendosMensais = 0; 
+        (db.fiis || []).forEach(f => {
+            const valCusto = f.qtd * f.pm; const valAtual = f.qtd * f.atual; const rendMensalExato = (f.rendimentoPorCota || 0) * f.qtd;
+            totalFiisPM += valCusto; totalFiisVal += valAtual; totalDividendosMensais += rendMensalExato;
+            const lucroEmReais = valAtual - valCusto; const variacaoPerc = valCusto > 0 ? (lucroEmReais / valCusto) * 100 : 0; const divYieldPerc = f.atual > 0 ? ((f.rendimentoPorCota || 0) / f.atual) * 100 : 0;
+            const badgeClass = lucroEmReais >= 0 ? "badge-green" : "badge-red"; const sinal = lucroEmReais >= 0 ? "+" : "";
+            
+            fiiL.innerHTML += `
+            <div class="asset-card-item">
+                <div class="asset-card-header">
+                    <div style="display:flex; align-items:center;">
+                        <div class="fii-icon-box">${f.ticker.replace(/[0-9]/g, '')}</div>
+                        <div><b style="font-size:17px; color:white; letter-spacing: 0.5px;">${f.ticker}</b><br><span style="color:var(--sub); font-size:10px; font-weight:700; text-transform:uppercase;">Cota Atual B3: <b style="color:white;">${fM(f.atual)}</b></span></div>
+                    </div>
+                    <div style="display:flex; gap: 8px;">
+                        <button onclick="abrirModalEditFii(${f.id})" style="background:rgba(255,204,0,0.1); border:1px solid rgba(255,204,0,0.3); color:var(--euro); width:32px; height:32px; border-radius:10px; padding:0;">✏️</button>
+                        <button onclick="delFii(${f.id})" style="background:rgba(255,82,82,0.1); border:1px solid rgba(255,82,82,0.3); color:var(--danger); width:32px; height:32px; border-radius:10px; padding:0;">🗑️</button>
+                    </div>
+                </div>
+                <div class="grid-3">
+                    <div><span class="dash-label">Posição</span><b style="color:white; font-size:15px;">${String(f.qtd).padStart(2, '0')} cotas</b></div>
+                    <div style="text-align:center;"><span class="dash-label">Custo Médio</span><b style="color:white; font-size:15px;">${fM(f.pm)}</b></div>
+                    <div style="text-align:right;"><span class="dash-label">Total Aplicado</span><b style="color:white; font-size:15px;">${fM(valCusto)}</b></div>
+                </div>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-top: 15px; padding-top: 15px; border-top: 1px dashed rgba(255,255,255,0.05);">
+                    <div style="display:flex; flex-direction:column;">
+                        <span class="dash-label" style="color:white;">Variação</span>
+                        <div style="display:flex; align-items:center; margin-top:2px;"><b style="font-size:14px; color: ${lucroEmReais>=0 ? 'var(--accent)' : 'var(--danger)'};">${sinal}${fM(lucroEmReais)}</b><span class="dash-badge ${badgeClass}">${sinal}${variacaoPerc.toFixed(2)}%</span></div>
+                    </div>
+                    <div style="text-align:right;"><span class="dash-label" style="color:white;">Valor Atual</span><b style="font-size:18px; color:white;">${fM(valAtual)}</b></div>
+                </div>
+                <div class="fii-proventos-box">
+                    <div><small style="color:var(--sub); font-size:10px; font-weight:700; letter-spacing:0.5px; text-transform:uppercase;">Provento Declarado / DY Mês</small><br><span style="color:var(--text); font-size:12px; font-weight:800;">${divYieldPerc.toFixed(2)}% <span style="font-weight:400; color:var(--sub);">(${fM(f.rendimentoPorCota || 0)} p/ cota)</span></span></div>
+                    <div style="display:flex; align-items:center; gap:12px;"><b style="font-size:18px; color:var(--accent);">${fM(rendMensalExato)}</b></div>
+                </div>
+            </div>`;
+        });
+        
+        const variacaoGlobalRS = totalFiisVal - totalFiisPM; const variacaoGlobalPerc = totalFiisPM > 0 ? (variacaoGlobalRS / totalFiisPM) * 100 : 0;
+        document.getElementById("fiiResumoTotal").innerText = fM(totalFiisVal); document.getElementById("fiiResumoProventos").innerText = fM(totalDividendosMensais); document.getElementById("fiiResumoAplicado").innerText = fM(totalFiisPM);
+        document.getElementById("fiiResumoVarBadge").innerText = `${variacaoGlobalPerc >= 0 ? '+' : ''}${variacaoGlobalPerc.toFixed(2)}%`; document.getElementById("fiiResumoVarBadge").className = `dash-badge ${variacaoGlobalPerc >= 0 ? 'badge-green' : 'badge-red'}`;
+        document.getElementById("fiiResumoVarRS").innerText = `${variacaoGlobalRS >= 0 ? '+' : ''}${fM(variacaoGlobalRS)}`; document.getElementById("fiiResumoVarRS").style.color = variacaoGlobalRS >= 0 ? 'var(--accent)' : 'var(--danger)';
+        document.getElementById("fiiContadorLabel").innerText = `${(db.fiis || []).length} Ativos`;
+
+        (db.inv || []).forEach(i => {
+            if(i.m === 'EUR') tEUR += i.s; else if(i.m === 'USD') tUSD += i.s; else tBRL += i.s;
+            let hH = '<div class="history-line">'; const hF = (i.history || []).filter(h => h.mes === mesAtual); if(hF.length > 0) hF.forEach(h => { hH += `<span class="history-tag">${h.v >= 0 ? '+' : ''}${fM(h.v, i.m)} (${h.d})</span>`; }); else hH += '<span>Sem lançamentos</span>'; hH += '</div>';
+            let cC = i.m === 'EUR' ? 'bank-eur' : (i.m === 'USD' ? 'bank-usd' : 'bank-brl');
+            invL.innerHTML += `<div class="bank-item ${cC}"><div style="display:flex; justify-content:space-between; margin-bottom:5px;"><span style="font-weight:700;">${i.b}</span> <b style="font-size:16px;">${fM(i.s, i.m)}</b></div>${hH}<div style="display:flex; gap:5px;"><button class="btn-small" style="background:var(--accent); color:#000;" onclick="addSaldoInv(${i.id})">+ Aporte</button><button class="btn-small" style="color:var(--euro);" onclick="editarSaldoInv(${i.id})">✏️</button><button class="btn-small" style="color:var(--sub);" onclick="limparHistoricoInv(${i.id})">🧹</button><button class="btn-small" style="color:var(--danger);" onclick="delInv(${i.id})">🗑️</button></div></div>`;
+        });
+        document.getElementById("patBRL").innerText = fM(tBRL); document.getElementById("patEUR").innerText = fM(tEUR, 'EUR'); document.getElementById("patEUR_Convertido").innerText = `≈ ${fM(tEUR * cotaEuro)}`; document.getElementById("patUSD").innerText = fM(tUSD, 'USD'); document.getElementById("patUSD_Convertido").innerText = `≈ ${fM(tUSD * cotaUsd)}`;
+
+        (db.contas || []).forEach(c => {
+            let hH = '<div class="history-line">'; const hF = (c.history || []).filter(h => h.mes === mesAtual); if(hF.length > 0) hF.forEach(h => { hH += `<span class="history-tag">${h.v >= 0 ? '+' : ''}${fM(h.v)} (${h.d})</span>`; }); else hH += '<span>Sem lançamentos</span>'; hH += '</div>';
+            const bStyle = bankStyles[c.icon || 'outro'];
+            contasList.innerHTML += `<div class="bank-item bank-brl" style="border-left-color: ${bStyle.c} !important;"><div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;"><div style="display:flex; align-items:center;"><div class="bank-icon-box" style="background: ${bStyle.c}; color: ${bStyle.t};">${bStyle.svg}</div><span style="font-weight:700;">${c.b}</span></div><b style="font-size:16px;">${fM(c.s)}</b></div>${hH}<div style="display:flex; gap:5px;"><button class="btn-small" style="background:var(--accent); color:#000;" onclick="addSaldoConta(${c.id})">+ Receita</button><button class="btn-small" style="color:var(--euro);" onclick="editarSaldoConta(${c.id})">✏️</button><button class="btn-small" style="color:var(--sub);" onclick="limparHistoricoConta(${c.id})">🧹</button><button class="btn-small" style="color:var(--danger);" onclick="delConta(${c.id})">🗑️</button></div></div>`;
+        });
+
+        let selH = `<option value="" disabled selected>🏦 Selecione de onde vai sair...</option><option value="avulso">⏳ Avulso (Sem debitar conta)</option>`;
+        if (db.contas && db.contas.length > 0) { selH += `<optgroup label="💳 Contas Correntes">`; db.contas.forEach(c => { selH += `<option value="cc_${c.id}">🏦 ${c.b}</option>`; }); selH += `</optgroup>`; }
+        if (db.cartoes && db.cartoes.length > 0) { 
+            selH += `<optgroup label="💳 Cartões de Crédito / Pré-Pago">`; 
+            (db.cartoes || []).forEach((c, idx) => { 
+                const prepBadge = c.prepago ? ' (Débito)' : '';
+                selH += `<option value="card_${c.id}">💳 ${c.nome}${prepBadge}</option>`; 
+            }); 
+            selH += `</optgroup>`; 
+        }
+        
+        const hoje = new Date(); hoje.setHours(0,0,0,0); const [anoSelStr, mesSelStr] = mesAtual.split("-"); const anoSelNum = parseInt(anoSelStr); const mesSelNum = parseInt(mesSelStr); 
+        let a = anoSelNum; let m = mesSelNum + 1; if(m > 12) { m = 1; a++; } let mesFuturo = `${a}-${String(m).padStart(2, '0')}`;
+        let totFat = 0, totCnt = 0;
+
+        (db.cartoes || []).forEach((c, idx) => {
+            const isPrepago = c.prepago || false;
+            const itensAtual = (mesAtivo.itens || []).filter(i => i.metodo === `card_${c.id}`); 
+            
+            // SE FOR DÉBITO/PRE PAGO
+            if (isPrepago) {
+                const totalGastoMes = itensAtual.reduce((a, b) => a + b.v, 0); 
+                
+                const extratoHtml = itensAtual.map(i => `
+                    <div class="item"><div style="display:flex; align-items:center;"><button class="btn-check" style="cursor:default;"><span class="badge-pago">✅ PAGO</span></button><div class="item-info"><span>${i.d}</span><span class="tag tag-unico">DÉBITO</span></div></div><div class="item-value-box"><b style="color:white;">-${fM(i.v)}</b><div style="display:flex; gap:2px;"><button onclick="editarGasto(${i.id})" style="background:none; color:var(--euro); font-size:14px; padding:0 4px;">✏️</button><button onclick="delGasto(${i.id})" style="background:none; color:white; font-size:16px; padding:0 4px;">🗑️</button></div></div></div>`).join('');
+
+                containerCartoes.innerHTML += `
+                    <div class="cartao-fisico" style="background:${c.cor}">
+                        <span class="config-btn" onclick="abrirModalCartao(${idx})">⚙️</span>
+                        <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-top: 15px;">
+                            <div>
+                                <div style="background:rgba(255,204,0,0.2); color:var(--euro); padding:4px 8px; border-radius:6px; font-size:9px; font-weight:800; width:fit-content; margin-bottom:8px; border: 1px dashed var(--euro);">💳 CONTA DÉBITO EMPRESA</div>
+                                <div style="margin-bottom: 6px;">${getBandeiraLogo(c.bandeira)}</div>
+                                <div style="font-size:12px; font-weight:700;">${c.nome.toUpperCase()}</div>
+                                <div style="font-size:24px; font-weight:800; margin:4px 0 0 0; color: white;">${fM(c.limite)} <small style="font-size:10px; font-weight:400; color:var(--sub);">SALDO</small></div>
+                            </div>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; font-size:10px; align-items:center; margin-top: 15px;"><span>GASTO NO MÊS: ${fM(totalGastoMes)}</span><span onclick="toggleFatura(${c.id})" style="text-decoration:underline; cursor:pointer; margin-right: 40px;">${faturasVisiveis[c.id] ? 'FECHAR EXTRATO' : 'VER EXTRATO'}</span></div>
+                        <button class="btn-quick-add" onclick="prepararLancamentoCartao(${c.id})">+</button>
+                        <button class="btn-add-saldo-inline" onclick="addSaldoCartaoPrepago(${c.id})">+ ADICIONAR SALDO</button>
+                        <div id="fat_${c.id}" style="display:${faturasVisiveis[c.id]?'block':'none'}; margin-top:15px; border-top:1px solid rgba(255,255,255,0.15); padding-top:12px;">${extratoHtml}</div>
+                    </div>`;
+
+            } else {
+                // CARTÃO DE CRÉDITO NORMAL
+                const somaMesAtual = itensAtual.reduce((a, b) => a + b.v, 0); 
+                totFat += somaMesAtual; 
+                
+                const faturaPaga = itensAtual.length > 0 && itensAtual.every(i => i.p);
+                
+                let limiteBloqueado = 0; Object.keys(db.meses).forEach(mKey => { (db.meses[mKey].itens || []).forEach(i => { if (i.metodo === `card_${c.id}` && !i.p) { if (i.cat === 'parc' || i.cat === 'unico') { limiteBloqueado += i.v; } else if (i.cat === 'fixo' && mKey === mesAtual) { limiteBloqueado += i.v; } } }); });
+                let proxFatura = 0; if (db.meses[mesFuturo] && db.meses[mesFuturo].itens) { proxFatura += db.meses[mesFuturo].itens.filter(i => i.metodo === `card_${c.id}`).reduce((a,b) => a + b.v, 0); }
+                (db.fixosMestre || []).forEach(f => { if (f.metodo === `card_${c.id}` && (!f.startMes || mesFuturo >= f.startMes)) { let jaExiste = db.meses[mesFuturo] && db.meses[mesFuturo].itens && db.meses[mesFuturo].itens.some(i => i.d === f.d); if (!jaExiste) proxFatura += f.v; } });
+                
+                const limiteTotal = parseFloat(c.limite) || 1; let pctUso = (limiteBloqueado / limiteTotal) * 100; if (pctUso > 100) pctUso = 100; const barClass = pctUso >= 80 ? 'danger' : '';
+                const diaFechamento = parseInt(c.fech) || 31; const dataFechamento = new Date(anoSelNum, mesSelNum, diaFechamento); dataFechamento.setHours(0,0,0,0);
+                
+                let statusHtml = '';
+                if (faturaPaga && itensAtual.length > 0) statusHtml = `<span class="status-fatura status-melhor-dia" style="border:none; background:transparent;">✅ LANÇAMENTOS PAGOS</span>`;
+                else { if (hoje.getTime() > dataFechamento.getTime()) statusHtml = `<span class="status-fatura status-fechada">🔒 FECHADA</span>`; else if (hoje.getTime() === dataFechamento.getTime()) statusHtml = `<span class="status-fatura status-melhor-dia">⭐ FECHA HOJE</span>`; else statusHtml = `<span class="status-fatura status-aberta">🟢 ABERTA</span>`; }
+
+                const faturaHtml = itensAtual.map(i => `
+                    <div class="item"><div style="display:flex; align-items:center;"><button class="btn-check" onclick="togglePago(${i.id})">${i.p ? '<span class="badge-pago">✅ PAGO</span>' : '🔲'}</button><div class="item-info"><span>${i.d}</span><span class="tag ${i.cat==='fixo'?'tag-fixo':(i.cat==='parc'?'tag-parc':'tag-unico')}">${i.cat==='fixo'?'FIXO':(i.cat==='parc'?'PARCELADO':'ÚNICO')}</span></div></div><div class="item-value-box"><b>${fM(i.v)}</b><div style="display:flex; gap:2px;"><button onclick="editarGasto(${i.id})" style="background:none; color:var(--euro); font-size:14px; padding:0 4px;">✏️</button><button onclick="delGasto(${i.id})" style="background:none; color:white; font-size:16px; padding:0 4px;">🗑️</button></div></div></div>`).join('');
+                
+                containerCartoes.innerHTML += `
+                    <div class="cartao-fisico" style="background:${c.cor}">
+                        <span class="config-btn" onclick="abrirModalCartao(${idx})">⚙️</span>${statusHtml}
+                        <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-top: 25px;">
+                            <div>
+                                <div style="margin-bottom: 6px;">${getBandeiraLogo(c.bandeira)}</div>
+                                <div style="font-size:12px; font-weight:700;">${c.nome.toUpperCase()}</div>
+                                <div style="font-size:24px; font-weight:800; margin:4px 0 0 0; color: ${faturaPaga && itensAtual.length > 0 ? 'var(--accent)' : 'white'};">${fM(somaMesAtual)}</div>
+                            </div>
+                            <div style="font-size: 10px; color: rgba(255,255,255,0.6); padding-bottom: 4px; text-align:right;">🔭 Próx. Mês: <b style="color: white;">${fM(proxFatura)}</b></div>
+                        </div>
+                        <div class="limit-bar-bg"><div class="limit-bar-fill ${barClass}" style="width: ${pctUso}%"></div></div>
+                        <div style="display:flex; justify-content:space-between; font-size:10px; align-items:center;"><span>LIMITE USADO: ${pctUso.toFixed(1)}% | DISP: ${fM(c.limite - limiteBloqueado)}</span><span onclick="toggleFatura(${c.id})" style="text-decoration:underline; cursor:pointer; margin-right: 40px;">${faturasVisiveis[c.id] ? 'FECHAR' : 'VER LANÇAMENTOS'}</span></div>
+                        <button class="btn-quick-add" onclick="prepararLancamentoCartao(${c.id})">+</button>
+                        ${itensAtual.length > 0 && !faturaPaga ? `<button class="btn-pagar-card-inline" onclick="pagarFaturaInteira(${c.id})">✅ PAGAR FATURA</button>` : ''}
+                        <div id="fat_${c.id}" style="display:${faturasVisiveis[c.id]?'block':'none'}; margin-top:15px; border-top:1px solid rgba(255,255,255,0.15); padding-top:12px;">${faturaHtml}</div>
+                    </div>`;
+            }
+        });
+
+        selectMetodo.innerHTML = selH;
+        
+        const outros = (mesAtivo.itens || []).filter(i => i.metodo === 'conta' || i.metodo.startsWith('cc_') || i.metodo === 'pendente' || i.metodo === 'avulso');
+        if(outros.length > 0) {
+            containerGastos.innerHTML = `<div class="section-title">Lançamentos Avulsos / Contas Correntes</div>`;
+            outros.forEach(i => { 
+                totCnt += i.v; let nomeTag = i.cat==='fixo'?'FIXO':(i.cat==='parc'?'PARCELADO':'ÚNICO');
+                if (i.metodo.startsWith('cc_')) { const b = (db.contas || []).find(x => x.id == i.metodo.split('_')[1]); if (b) { const bS = bankStyles[b.icon || 'outro']; nomeTag = `<span class="tag-icon" style="background:${bS.c}; color: ${bS.t};">${bS.svg}</span>` + nomeTag + ` • ${b.b.toUpperCase()}`; } } else if (i.metodo === 'pendente' || i.metodo === 'avulso' || i.metodo === 'conta') { nomeTag = `⏳ ` + nomeTag + ` • AVULSO`; }
+                containerGastos.innerHTML += `
+                <div class="item"><div style="display:flex; align-items:center;"><button class="btn-check" onclick="togglePago(${i.id})">${i.p ? '<span class="badge-pago">✅ PAGO</span>' : '🔲'}</button><div class="item-info"><span>${i.d}</span><span class="tag ${i.cat==='fixo'?'tag-fixo':(i.cat==='parc'?'tag-parc':'tag-unico')}">${nomeTag}</span></div></div><div class="item-value-box"><b>${fM(i.v)}</b><div style="display:flex; gap:2px;"><button onclick="editarGasto(${i.id})" style="background:none; color:var(--euro); font-size:14px; padding:0 4px;">✏️</button><button onclick="delGasto(${i.id})" style="background:none; color:var(--danger); font-size:16px; padding:0 4px;">🗑️</button></div></div></div>`; 
+            });
+        }
+        const sobra = (mesAtivo.limite || 0) - (totFat + totCnt); document.getElementById("sobraDisplay").innerText = fM(sobra); document.getElementById("sobraDisplay").style.color = sobra < 0 ? "var(--danger)" : "var(--accent)";
+        document.getElementById("resumoTotais").innerHTML = `<div class="resumo-line"><span>Gastos Faturas:</span> <b>-${fM(totFat)}</b></div><div class="resumo-line"><span>Gastos Conta/Avulsos:</span> <b>-${fM(totCnt)}</b></div><div class="resumo-line" style="margin-top:10px; border-top:1px solid #444; padding-top:10px; color:#fff; font-weight:bold;"><span>COMPROMETIDO:</span> <b>${fM(totFat + totCnt)}</b></div>`;
+    }
+
+    window.onload = () => { inicializarInterface(); getRates(); };
+</script>
+</body>
+</html>
